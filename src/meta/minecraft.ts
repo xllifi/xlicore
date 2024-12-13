@@ -1,6 +1,6 @@
 import path from 'path'
-import { dl, gameDir } from '../../index.js'
-import { DownloaderFile, DownloaderOpts } from '../../types/utils/Downloader.js'
+import { dl, gameDir } from '../index.js'
+import { DownloaderFile, DownloaderOpts } from '../types/utils/Downloader.js'
 import fsp from 'fs/promises'
 import fs from 'fs'
 
@@ -43,11 +43,6 @@ export async function getVersionManifest(version?: string, globalManifest?: Glob
   }
   const opts: DownloaderOpts = {
     getContent: true
-  }
-  const dest = path.resolve(file.dir, file.name!)
-  if (fs.existsSync(dest)) {
-    console.log('File already exists, reading!')
-    return JSON.parse(await fsp.readFile(dest, { encoding: 'utf8' }))
   }
 
   return await dl.downloadSingleFile<VersionManifest>(file, opts)

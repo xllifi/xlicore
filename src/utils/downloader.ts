@@ -28,7 +28,13 @@ export class Downloader {
 
     const dest: string = path.resolve(file.dir, file.name!)
     if (!fs.existsSync(file.dir)) fs.mkdirSync(file.dir, { recursive: true })
-    if (fs.existsSync(dest) && !opts.overwrite) throw `File ${dest} already exists`
+    if (fs.existsSync(dest) && !opts.overwrite) {
+      if (opts.getContent) {
+        console.log('File already exists, reading!')
+        return JSON.parse(fs.readFileSync(dest, { encoding: 'utf8' }))
+      }
+      throw `File ${dest} already exists`
+    }
 
     const resp = await ky(file.url, {
       method: 'get',
@@ -93,7 +99,7 @@ export class Downloader {
   private getHash(dest: string, algorithm: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const hash = crypto.createHash(algorithm)
-      const readStream = fs.createReadStream(dest, { encoding: 'utf8' })
+      const readStream = fs.createReadStream(dest)
 
       readStream.on('data', (chunk) => {
         hash.update(chunk)
