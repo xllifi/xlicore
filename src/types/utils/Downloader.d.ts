@@ -1,7 +1,7 @@
 import { DownloadProgress } from "ky"
 
 export type DownloaderFile = {
-  url: URL
+  url: string
   dir: string
   name?: string
   size?: number

@@ -5,7 +5,7 @@ import fsp from 'fs/promises'
 import fs from 'fs'
 
 export async function getGlobalManifest(): Promise<GlobalManifest> {
-  const dir: string = path.resolve(gameDir, 'meta')
+  const dir: string = path.resolve(gameDir, 'version')
   const name: string = 'global_manifest.json'
   const dest: string = path.resolve(dir, name)
   if (fs.existsSync(dest)) {
@@ -17,7 +17,7 @@ export async function getGlobalManifest(): Promise<GlobalManifest> {
   }
 
   const file: DownloaderFile = {
-    url: new URL('https://piston-meta.mojang.com/mc/game/version_manifest_v2.json'),
+    url: 'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json',
     dir,
     name
   }
@@ -33,8 +33,8 @@ export async function getVersionManifest(version?: string, globalManifest?: Glob
 
   const gmEntry: GlobalManifestVersion = globalManifest.versions.filter((x) => x.id == version || globalManifest.latest.release)[0]
   const file: DownloaderFile = {
-    url: new URL(gmEntry.url),
-    dir: path.resolve(gameDir, 'meta/version'),
+    url: gmEntry.url,
+    dir: path.resolve(gameDir, 'version', gmEntry.id),
     name: `${gmEntry.id}.json`
   }
   const opts: DownloaderOpts = {
@@ -56,7 +56,7 @@ export async function getVersionManifest(version?: string, globalManifest?: Glob
 export async function getAssetIndex(versionManifest: VersionManifest): Promise<AssetIndex> {
   const assetIndex: VersionManifestAssetIndex = versionManifest.assetIndex;
   const file: DownloaderFile = {
-    url: new URL(assetIndex.url),
+    url: assetIndex.url,
     dir: path.resolve(gameDir, 'assets/indexes'),
     name: `${assetIndex.id}.json`,
     size: assetIndex.size

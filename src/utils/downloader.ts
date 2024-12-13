@@ -19,7 +19,9 @@ export class Downloader {
     opts = {...this.generalOpts, ...opts}
     file.dir = path.resolve(file.dir)
 
-    if (file.name == null) file.name = file.url.pathname.split('/').pop()
+    if (!URL.canParse(file.url)) throw `Invald URL: ${file.url}`
+
+    if (file.name == null) file.name = file.url.split('/').pop()
     if (!opts.onDownloadProgress) opts.onDownloadProgress = (progress) => console.log(`Downloading ${file.url}. Progress: ${progress.percent * 100} (${progress.transferredBytes}/${progress.totalBytes})`)
     if (!opts.onDownloadFinish) opts.onDownloadFinish = () => console.log(`Finished downloading ${file.url}`)
 
