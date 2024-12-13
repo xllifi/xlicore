@@ -35,14 +35,14 @@ export async function getVersionManifest(version?: string, globalManifest?: Glob
   const file: DownloaderFile = {
     url: gmEntry.url,
     dir: path.resolve(gameDir, 'version', gmEntry.id),
-    name: `${gmEntry.id}.json`
-  }
-  const opts: DownloaderOpts = {
-    getContent: true,
+    name: `${gmEntry.id}.json`,
     verify: {
       hash: gmEntry.sha1,
       algorithm: 'sha1'
     }
+  }
+  const opts: DownloaderOpts = {
+    getContent: true
   }
   const dest = path.resolve(file.dir, file.name!)
   if (fs.existsSync(dest)) {
@@ -59,14 +59,14 @@ export async function getAssetIndex(versionManifest: VersionManifest): Promise<A
     url: assetIndex.url,
     dir: path.resolve(gameDir, 'assets/indexes'),
     name: `${assetIndex.id}.json`,
-    size: assetIndex.size
-  }
-  const opts: DownloaderOpts = {
-    getContent: true,
+    size: assetIndex.size,
     verify: {
       hash: assetIndex.sha1,
       algorithm: 'sha1'
     }
+  }
+  const opts: DownloaderOpts = {
+    getContent: true
   }
   return await dl.downloadSingleFile<AssetIndex>(file, opts)
 }

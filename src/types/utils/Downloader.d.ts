@@ -5,6 +5,7 @@ export type DownloaderFile = {
   dir: string
   name?: string
   size?: number
+  verify?: DownloaderVerify
 }
 
 export type DownloaderCallbackOnDownload = (progress: DownloadProgress, chunk: Uint8Array, file: DownloaderFile) => void
@@ -15,7 +16,6 @@ export type DownloaderOpts = {
   onDownloadFinish?: DownloaderCallbackOnFinish
   overwrite?: boolean
   getContent?: boolean
-  verify?: DownloaderVerify
 }
 
 export type DownloaderVerify = {

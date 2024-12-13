@@ -16,13 +16,14 @@ export class Downloader {
   }
 
   async downloadSingleFile<T>(file: dlt.DownloaderFile, opts: dlt.DownloaderOpts = {}): Promise<T> {
-    opts = {...this.generalOpts, ...opts}
+    opts = { ...this.generalOpts, ...opts }
     file.dir = path.resolve(file.dir)
 
     if (!URL.canParse(file.url)) throw `Invald URL: ${file.url}`
 
     if (file.name == null) file.name = file.url.split('/').pop()
-    if (!opts.onDownloadProgress) opts.onDownloadProgress = (progress) => console.log(`Downloading ${file.url}. Progress: ${progress.percent * 100} (${progress.transferredBytes}/${progress.totalBytes})`)
+    if (!opts.onDownloadProgress)
+      opts.onDownloadProgress = (progress) => console.log(`Downloading ${file.url}. Progress: ${progress.percent * 100} (${progress.transferredBytes}/${progress.totalBytes})`)
     if (!opts.onDownloadFinish) opts.onDownloadFinish = () => console.log(`Finished downloading ${file.url}`)
 
     const dest: string = path.resolve(file.dir, file.name!)
@@ -45,11 +46,11 @@ export class Downloader {
       const readableStream: Readable = Readable.fromWeb(resp.body! as ReadableStream)
       readableStream.pipe(writeStream)
 
-      if (opts.verify) {
+      if (file.verify) {
         readableStream.on('end', async () => {
-          if (!await this.verifyFile(dest, opts.verify!)) {
-            if (!opts.verify!.noRetry) {
-              return this.downloadSingleFile(file, {...opts, overwrite: true, verify: {...opts.verify!, noRetry: true}})
+          if (!(await this.verifyFile(dest, file.verify!))) {
+            if (!file.verify!.noRetry) {
+              return this.downloadSingleFile({ ...file, verify: { ...file.verify!, noRetry: true } }, { ...opts, overwrite: true })
             } else {
               fs.unlinkSync(dest)
               throw `Failed to verify file ${dest}`
@@ -60,7 +61,7 @@ export class Downloader {
 
       if (opts.getContent) {
         let result = ''
-        readableStream.on('data', (chunk) => result += chunk)
+        readableStream.on('data', (chunk) => (result += chunk))
         readableStream.on('end', () => resolve(JSON.parse(result)))
       }
 
@@ -74,11 +75,10 @@ export class Downloader {
   }
 
   async downloadMultipleFiles(files: dlt.DownloaderFile[], opts: dlt.DownloaderOpts = {}) {
-    opts = {...this.generalOpts, ...opts}
-    const errs: Error[] = [];
+    opts = { ...this.generalOpts, ...opts }
+    const errs: Error[] = []
     for (const file of files) {
-      this.downloadSingleFile(file, opts)
-      .catch((err) => errs.push(err))
+      this.downloadSingleFile(file, opts).catch((err) => errs.push(err))
     }
     if (errs.length > 0) {
       throw errs
@@ -93,7 +93,7 @@ export class Downloader {
   private getHash(dest: string, algorithm: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const hash = crypto.createHash(algorithm)
-      const readStream = fs.createReadStream(dest, {encoding: 'utf8'})
+      const readStream = fs.createReadStream(dest, { encoding: 'utf8' })
 
       readStream.on('data', (chunk) => {
         hash.update(chunk)
