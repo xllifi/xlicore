@@ -14,13 +14,11 @@ export async function downloadJava(launch: Launch, versionManifest: VersionManif
   const arch = archMapping[process.arch]
 
   const majorVersion: number = versionManifest.javaVersion.majorVersion
-  const temurinMeta: TemurinMeta = (
-    await ky.get<TemurinMeta[]>(`https://api.adoptium.net/v3/assets/latest/${majorVersion}/hotspot?image_type=jre&architecture=${arch}&os=${os}`).json()
-  )[0]
+  const temurinMeta: TemurinMeta = (await ky.get<TemurinMeta[]>(`https://api.adoptium.net/v3/assets/latest/${majorVersion}/hotspot?image_type=jre&architecture=${arch}&os=${os}`).json())[0]
   const file: DownloaderFile = {
     url: temurinMeta.binary.package.link,
-    dir: path.resolve(launch.opts.rootDir, 'java', temurinMeta.release_name+'-'+temurinMeta.binary.image_type),
-    name: `${temurinMeta.release_name+'-'+temurinMeta.binary.image_type}.zip`,
+    dir: path.resolve(launch.opts.rootDir, 'java', temurinMeta.release_name + '-' + temurinMeta.binary.image_type),
+    name: `${temurinMeta.release_name + '-' + temurinMeta.binary.image_type}.zip`,
     type: 'java',
     size: temurinMeta.binary.package.size,
     verify: {

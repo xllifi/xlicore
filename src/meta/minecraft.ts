@@ -49,7 +49,7 @@ export async function getVersionManifest(launch: Launch, version?: string, globa
 }
 
 export async function getAssetIndex(launch: Launch, versionManifest: VersionManifest): Promise<AssetIndex> {
-  const assetIndex: VersionManifestAssetIndex = versionManifest.assetIndex;
+  const assetIndex: VersionManifestAssetIndex = versionManifest.assetIndex
   const file: DownloaderFile = {
     url: assetIndex.url,
     dir: path.resolve(launch.opts.rootDir, 'assets/indexes'),

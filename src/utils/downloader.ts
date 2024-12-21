@@ -1,4 +1,4 @@
-import ky, { DownloadProgress } from 'ky'
+import ky from 'ky'
 import * as fs from 'fs'
 import * as fsp from 'fs/promises'
 import * as dlt from '../types/utils/Downloader.js'
@@ -6,7 +6,7 @@ import path from 'path'
 import { Readable } from 'stream'
 import { ReadableStream } from 'stream/web'
 import crypto from 'crypto'
-import { calcSpeed, formatSpeed, sleep, splitArray } from './general.js'
+import { sleep, splitArray } from './general.js'
 
 export class Downloader {
   tempSuffix: string
@@ -113,8 +113,8 @@ export class Downloader {
           } else {
             console.log(
               `[MULDL] Total download: ${(progress.percent * 100).toFixed(2)}% (${currentBytes}/${progress.totalBytes})` +
-              (file.type ? ` (${file.type})` : '') +
-              ` | Currently downloading ${file.name}`
+                (file.type ? ` (${file.type})` : '') +
+                ` | Currently downloading ${file.name}`
             )
           }
         }
@@ -122,12 +122,10 @@ export class Downloader {
     }
     const errs: Error[] = []
 
-    const chunks = splitArray(files.length/64, files)
+    const chunks = splitArray(files.length / 64, files)
 
     for (const chunk of chunks) {
-      await Promise.all(chunk.map((file) =>
-        this.downloadSingleFile(file, opts).catch((err) => errs.push(err))
-      ))
+      await Promise.all(chunk.map((file) => this.downloadSingleFile(file, opts).catch((err) => errs.push(err))))
     }
 
     if (errs.length > 0) {

@@ -1,4 +1,4 @@
-import { Launch } from "./launch.js";
+import { Launch } from './launch.js'
 
 // const launchOpts: LaunchOpts = {
 //   auth: 'xllifi',
@@ -21,6 +21,4 @@ import { Launch } from "./launch.js";
 //   console.log(`\n\n\n\nCLASSPATH: "${[...minecraftCP, ...fabricCP].join(`;`)}"`)
 // })
 
-export {
-  Launch as Launch
-}
+export { Launch as Launch }

@@ -17,13 +17,13 @@ export class Launch {
   opts: LaunchOpts
 
   versionManifest: VersionManifest = {} as VersionManifest
-  fabricMeta: FabricLauncherMeta   = {} as FabricLauncherMeta
-  arguments: GameLaunchArguments   = {} as GameLaunchArguments
+  fabricMeta: FabricLauncherMeta = {} as FabricLauncherMeta
+  arguments: GameLaunchArguments = {} as GameLaunchArguments
 
-  classpath: string   = ''
+  classpath: string = ''
   javaExePath: string = ''
-  assetPath: string   = ''
-  instancePath: string   = ''
+  assetPath: string = ''
+  instancePath: string = ''
 
   constructor(opts: LaunchOpts) {
     this.opts = opts
@@ -35,19 +35,19 @@ export class Launch {
 
   async start(): Promise<void> {
     this.versionManifest = await getVersionManifest(this, this.opts.version)
-    this.fabricMeta      = await getFabricLauncherMetaForVersion(this, this.versionManifest)
+    this.fabricMeta = await getFabricLauncherMetaForVersion(this, this.versionManifest)
 
     // Create instance directory
     this.instancePath = path.resolve(this.opts.rootDir, 'instance')
     if (!existsSync(this.instancePath)) mkdirSync(this.instancePath, { recursive: true })
 
     // Download
-    const fabricCP    = await downloadFabricLibraries(this, this.fabricMeta)
+    const fabricCP = await downloadFabricLibraries(this, this.fabricMeta)
     const minecraftCP = await downloadMinecraftLibraries(this, this.versionManifest)
-    this.classpath    = [...fabricCP, ...minecraftCP].join(';')
-    this.javaExePath  = await downloadJava(this, this.versionManifest)
-    this.assetPath    = await downloadAssets(this, this.versionManifest)
-    this.arguments    = await buildArguments(this, this.versionManifest)
+    this.classpath = [...fabricCP, ...minecraftCP].join(';')
+    this.javaExePath = await downloadJava(this, this.versionManifest)
+    this.assetPath = await downloadAssets(this, this.versionManifest)
+    this.arguments = await buildArguments(this, this.versionManifest)
 
     console.log(`[launch.ts] JVM Arguments: ${JSON.stringify(this.arguments.jvm)}`)
     // console.log(`[launch.ts] Classpath: -cp ${this.classpath}`)
@@ -67,8 +67,7 @@ export class Launch {
       this.javaExePath,
       [
         ...this.arguments.jvm,
-        `-cp`,
-        this.classpath,
+        `-cp`, this.classpath,
         this.fabricMeta.launcherMeta.mainClass.client,
         ...this.arguments.game
       ],
@@ -76,4 +75,3 @@ export class Launch {
     )
   }
 }
-

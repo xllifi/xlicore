@@ -1,10 +1,10 @@
-import path from "path";
-import { FabricLauncherMeta, FabricLauncherMetaDownload } from "../../types/meta/fabric/FabricLauncherMeta.js";
-import { DownloaderFile } from "../../types/utils/Downloader.js";
-import { mavenParse } from "../../utils/mavenParser.js";
-import { MavenParserReturn } from "../../types/utils/MavenParser.js";
-import ky from "ky";
-import { Launch } from "../../launch.js";
+import path from 'path'
+import { FabricLauncherMeta, FabricLauncherMetaDownload } from '../../types/meta/fabric/FabricLauncherMeta.js'
+import { DownloaderFile } from '../../types/utils/Downloader.js'
+import { mavenParse } from '../../utils/mavenParser.js'
+import { MavenParserReturn } from '../../types/utils/MavenParser.js'
+import ky from 'ky'
+import { Launch } from '../../launch.js'
 
 export async function downloadFabricLibraries(launch: Launch, fabricLauncherMeta: FabricLauncherMeta): Promise<string[]> {
   const files: DownloaderFile[] = []
@@ -16,7 +16,7 @@ export async function downloadFabricLibraries(launch: Launch, fabricLauncherMeta
   const intermediaryResolved = mavenParse('https://maven.fabricmc.net/', fabricLauncherMeta.intermediary.maven)
 
   // Calculate total size
-  let totalSize: number = libs.map(x => x.size).reduce((partialSum, x) => partialSum+x, 0)
+  let totalSize: number = libs.map((x) => x.size).reduce((partialSum, x) => partialSum + x, 0)
   totalSize += await ky.head(loaderResolved.url).then((res) => parseInt(res.headers.get('content-length')!))
   totalSize += await ky.head(intermediaryResolved.url).then((res) => parseInt(res.headers.get('content-length')!))
 
@@ -29,7 +29,7 @@ export async function downloadFabricLibraries(launch: Launch, fabricLauncherMeta
     type: 'libraries',
     size: totalSize,
     verify: {
-      hash: await ky.get<string>(loaderResolved.url+'.sha1').text(),
+      hash: await ky.get<string>(loaderResolved.url + '.sha1').text(),
       algorithm: 'sha1'
     }
   }
@@ -43,7 +43,7 @@ export async function downloadFabricLibraries(launch: Launch, fabricLauncherMeta
     type: 'libraries',
     size: totalSize,
     verify: {
-      hash: await ky.get<string>(intermediaryResolved.url+'.sha1').text(),
+      hash: await ky.get<string>(intermediaryResolved.url + '.sha1').text(),
       algorithm: 'sha1'
     }
   }

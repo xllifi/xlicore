@@ -16,13 +16,15 @@ export async function downloadAssets(launch: Launch, versionManifest: VersionMan
     }
   }
   const assetIndex: AssetIndex = await launch.dl.downloadSingleFile<AssetIndex>(file, { getContent: true })
-  const totalSize = Object.values(assetIndex.objects).map(x => x.size).reduce((pV, x) => pV += x)
+  const totalSize = Object.values(assetIndex.objects)
+    .map((x) => x.size)
+    .reduce((pV, x) => (pV += x))
   const files: DownloaderFile[] = []
   for (const asset of Object.values(assetIndex.objects)) {
     console.log(`Populating asset filelist`)
     const file: DownloaderFile = {
-      url: `https://resources.download.minecraft.net/${asset.hash.substring(0,2)}/${asset.hash}`,
-      dir: path.resolve(assetRoot, 'objects', asset.hash.substring(0,2)),
+      url: `https://resources.download.minecraft.net/${asset.hash.substring(0, 2)}/${asset.hash}`,
+      dir: path.resolve(assetRoot, 'objects', asset.hash.substring(0, 2)),
       name: `${asset.hash}`,
       type: 'assets',
       size: totalSize,

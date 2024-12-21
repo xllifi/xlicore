@@ -10,7 +10,9 @@ export function buildArguments(launch: Launch, versionManifest: VersionManifest)
     if (isRuledJvmArgument(jvmArg)) {
       for (const rule of jvmArg.rules) {
         if ((rule.os.arch && rule.os.arch != mojangArchMapping[process.arch]) || (rule.os.name && rule.os.name != mojangOsMapping[process.platform])) {
-          console.error(`Not adding argument ${jvmArg.value} because it was made for ${rule.os.name} (${rule.os.arch}) and we're running ${mojangOsMapping[process.platform]} (${mojangArchMapping[process.arch]})`)
+          console.error(
+            `Not adding argument ${jvmArg.value} because it was made for ${rule.os.name} (${rule.os.arch}) and we're running ${mojangOsMapping[process.platform]} (${mojangArchMapping[process.arch]})`
+          )
           continue jvmArgLoop
         }
       }
@@ -60,7 +62,7 @@ export function buildArguments(launch: Launch, versionManifest: VersionManifest)
 
     '--uuid': '',
     '--clientId': '',
-    '--xuid': '',
+    '--xuid': ''
   }
 
   for (const arg in jvm) {

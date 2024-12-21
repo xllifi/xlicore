@@ -7,7 +7,7 @@ export async function downloadMinecraftLibraries(launch: Launch, versionManifest
   const files: DownloaderFile[] = []
   const cp: string[] = []
 
-  const totalSize: number = versionManifest.libraries.map(x => x.downloads.artifact.size).reduce((partialSum, x) => partialSum+x, 0) + versionManifest.downloads.client.size
+  const totalSize: number = versionManifest.libraries.map((x) => x.downloads.artifact.size).reduce((partialSum, x) => partialSum + x, 0) + versionManifest.downloads.client.size
 
   libLoop: for (const lib of versionManifest.libraries) {
     if (lib.rules)

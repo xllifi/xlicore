@@ -1,5 +1,5 @@
-import { FabricVersionsIntermediary } from "./FabricIntermediary.js"
-import { FabricVersionsLoader } from "./FabricLoader.js"
+import { FabricVersionsIntermediary } from './FabricIntermediary.js'
+import { FabricVersionsLoader } from './FabricLoader.js'
 
 export type FabricLauncherMeta = {
   loader: FabricVersionsLoader

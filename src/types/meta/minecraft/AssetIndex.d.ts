@@ -11,6 +11,6 @@ type AssetIndexObject = {
    * Also used to get asset's link:
    * https://resources.download.minecraft.net/<first 2 symbols of the hash>/<full hash>
    */
-  hash: string,
+  hash: string
   size: number
 }
