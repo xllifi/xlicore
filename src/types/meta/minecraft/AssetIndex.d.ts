@@ -2,13 +2,15 @@
 
 type AssetIndex = {
   objects: {
-    [key: string]: {
-      /** SHA1 hash of the asset.
-       * Also used to get asset's link:
-       * https://resources.download.minecraft.net/<first 2 symbols of the hash>/<full hash>
-       */
-      hash: string,
-      size: number
-    }
+    [key: string]: AssetIndexObject
   }
+}
+
+type AssetIndexObject = {
+  /** SHA1 hash of the asset.
+   * Also used to get asset's link:
+   * https://resources.download.minecraft.net/<first 2 symbols of the hash>/<full hash>
+   */
+  hash: string,
+  size: number
 }

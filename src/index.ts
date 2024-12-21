@@ -1,26 +1,26 @@
-import * as path from 'node:path'
-import { Downloader } from './utils/downloader.js'
-import { downloadFabricLibraries } from './download/libraries/fabric.js'
-import { getVersionManifest } from './meta/minecraft.js'
-import { getFabricLauncherMetaForVersion } from './meta/fabric.js'
-import { FabricLauncherMeta } from './types/meta/fabric/FabricLauncherMeta.js'
+import { Launch } from "./launch.js";
 
-export const gameDir: string = path.resolve(process.cwd(), 'store')
+// const launchOpts: LaunchOpts = {
+//   auth: 'xllifi',
+//   authserver: '',
+//   rootDir: path.resolve(process.cwd(), 'store'),
+//   version: '1.21.1',
+//   verify: true,
+//   fabric: {
+//     version: null
+//   }
+// }
+// export const launch = new Launch(launchOpts)
+// launch.start()
 
-export const dl: Downloader = new Downloader(undefined, {
-  onDownloadProgress: (progress, _chunk, file) => {
-    console.log(`Modified progress message of file ${file.url}!${progress.totalBytes == 0 ? '' : ` Downloaded: ${(progress.percent * 100).toFixed(2)}%`}`)
-  }
-})
+// process.on('unhandledRejection', (err) => {
+//   console.error(`Unexpected error: "${JSON.stringify(err)}" ${err}`)
+// })
 
-const versionManifest: VersionManifest = await getVersionManifest('1.21')
-const fabricLM: FabricLauncherMeta = await getFabricLauncherMetaForVersion(versionManifest)
+// process.on('beforeExit', () => {
+//   console.log(`\n\n\n\nCLASSPATH: "${[...minecraftCP, ...fabricCP].join(`;`)}"`)
+// })
 
-const fabricCP: string[] = await downloadFabricLibraries(fabricLM)
-console.log(JSON.stringify(fabricCP))
-
-
-
-process.on('unhandledRejection', (err) => {
-  console.error(`Unexpected error: "${err}"`)
-})
+export {
+  Launch as Launch
+}

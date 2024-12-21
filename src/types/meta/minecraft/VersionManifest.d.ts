@@ -55,13 +55,28 @@ type VersionManifestArguments = {
   jvm: Array<string | VersionManifestArgumentsRule>,
 }
 
-type VersionManifestArgumentsRule = {
+type VersionManifestGameArgumentsRule = {
   /** Some conditions according to which this should apply. */
   rules: Array<{
       /** Action. Should launcher add it (`allow`) or not (`disallow`). */
       action: string,
       /** Is launcher feature enabled. Probably only used for official launcher. */
       features: { [key: string]: boolean },
+    }>
+  /** Argument to add / not add. */
+  value: string | Array<string>,
+}
+
+type VersionManifestJvmArgumentsRule = {
+  /** Some conditions according to which this should apply. */
+  rules: Array<{
+      /** Action. Should launcher add it (`allow`) or not (`disallow`). */
+      action: string,
+      /** Is launcher feature enabled. Probably only used for official launcher. */
+      os: {
+        name?: string
+        arch?: string
+      },
     }>
   /** Argument to add / not add. */
   value: string | Array<string>,

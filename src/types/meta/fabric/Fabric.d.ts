@@ -7,9 +7,9 @@ import { FabricVersionsYarn } from './FabricYarn'
 // Types for https://meta.fabricmc.net/v2/versions/
 
 export type FabricVersions = {
-  game: FabricVersionsGame
-  mappings: FabricVersionsYarn
-  intermediary: FabricVersionsIntermediary
-  loader: FabricVersionsLoader
-  installer: FabricVersionsInstaller
+  game: FabricVersionsGame[]
+  mappings: FabricVersionsYarn[]
+  intermediary: FabricVersionsIntermediary[]
+  loader: FabricVersionsLoader[]
+  installer: FabricVersionsInstaller[]
 }

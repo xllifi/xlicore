@@ -1,10 +1,12 @@
-import ky from 'ky'
+import ky, { DownloadProgress } from 'ky'
 import * as fs from 'fs'
+import * as fsp from 'fs/promises'
 import * as dlt from '../types/utils/Downloader.js'
 import path from 'path'
 import { Readable } from 'stream'
 import { ReadableStream } from 'stream/web'
 import crypto from 'crypto'
+import { calcSpeed, formatSpeed, sleep, splitArray } from './general.js'
 
 export class Downloader {
   tempSuffix: string
@@ -21,80 +23,130 @@ export class Downloader {
 
     if (!URL.canParse(file.url)) throw `Invald URL: ${file.url}`
 
+    // Verify variables
     if (file.name == null) file.name = file.url.split('/').pop()
     if (!opts.onDownloadProgress)
-      opts.onDownloadProgress = (progress) => console.log(`Downloading ${file.url}. Progress: ${progress.percent * 100} (${progress.transferredBytes}/${progress.totalBytes})`)
-    if (!opts.onDownloadFinish) opts.onDownloadFinish = () => console.log(`Finished downloading ${file.url}`)
+      opts.onDownloadProgress = (progress) =>
+        console.log(`[SINDL] Downloading ${file.name}${file.type ? ` (${file.type})` : ''}. Progress: ${(progress.percent * 100).toFixed(2)}% (${progress.transferredBytes}/${progress.totalBytes})`)
+    if (!opts.onDownloadFinish) opts.onDownloadFinish = () => console.log(`[SINDL] Finished downloading ${file.name}`)
 
     const dest: string = path.resolve(file.dir, file.name!)
+    // Ensure dir exists
     if (!fs.existsSync(file.dir)) fs.mkdirSync(file.dir, { recursive: true })
+    // Does file already exist
     if (fs.existsSync(dest) && !opts.overwrite) {
       if (opts.getContent) {
-        console.log('File already exists, reading!')
         return JSON.parse(fs.readFileSync(dest, { encoding: 'utf8' }))
       }
-      throw `File ${dest} already exists`
+      return null as T
     }
 
+    // Create request
+    const lastProgress: dlt.DownloaderLastProgress = { bytes: 0, timestamp: 0 }
     const resp = await ky(file.url, {
       method: 'get',
       onDownloadProgress: (progress, chunk) => {
-        if (file.size && progress.totalBytes == 0) {
+        if (lastProgress.timestamp + 250 > Date.now()) return
+        if (file.size) {
           progress.totalBytes = file.size
           progress.percent = progress.transferredBytes / progress.totalBytes
         }
-        opts.onDownloadProgress!(progress, chunk, file)
+        opts.onDownloadProgress!(progress, chunk, file, lastProgress)
+
+        lastProgress.timestamp = Date.now()
+        lastProgress.bytes = progress.transferredBytes
       }
     })
 
+    // Write to file
     return new Promise<T>((resolve, reject) => {
       const writeStream: fs.WriteStream = fs.createWriteStream(dest + this.tempSuffix)
       const readableStream: Readable = Readable.fromWeb(resp.body! as ReadableStream)
       readableStream.pipe(writeStream)
 
-      if (file.verify) {
-        readableStream.on('end', async () => {
-          if (!(await this.verifyFile(dest, file.verify!))) {
-            if (!file.verify!.noRetry) {
-              return this.downloadSingleFile({ ...file, verify: { ...file.verify!, noRetry: true } }, { ...opts, overwrite: true })
-            } else {
-              fs.unlinkSync(dest)
-              throw `Failed to verify file ${dest}`
-            }
-          }
-        })
-      }
-
+      // Optional listeners
       if (opts.getContent) {
         let result = ''
         readableStream.on('data', (chunk) => (result += chunk))
         readableStream.on('end', () => resolve(JSON.parse(result)))
       }
 
-      readableStream.on('end', () => {
+      // Main listeners
+      readableStream.on('end', async () => {
         opts.onDownloadFinish!(file)
         writeStream.close()
-        fs.renameSync(dest + this.tempSuffix, dest)
+        await sleep(250)
+        await fsp.rename(dest + this.tempSuffix, dest).catch((err) => {
+          if (!fs.existsSync(dest)) throw err
+        })
+
+        if (file.verify) {
+          resolve(await this.verifyFile(file, opts))
+        }
+
+        resolve(null as T)
       })
       readableStream.on('error', (err) => reject(err))
     })
   }
 
-  async downloadMultipleFiles(files: dlt.DownloaderFile[], opts: dlt.DownloaderOpts = {}) {
+  async downloadMultipleFiles(files: dlt.DownloaderFile[], opts: dlt.DownloaderOpts = {}): Promise<void> {
     opts = { ...this.generalOpts, ...opts }
-    const errs: Error[] = []
-    for (const file of files) {
-      this.downloadSingleFile(file, opts).catch((err) => errs.push(err))
+
+    // If there's size specified for every file then do total DL
+    if (files.filter((x) => x.size).length == files.length) {
+      console.log(`Doing total DL`)
+
+      let lastOnProgress: dlt.DownloaderCallbackOnProgress
+      if (opts.onDownloadProgress) lastOnProgress = opts.onDownloadProgress
+
+      let currentBytes: number = 0
+      opts = {
+        ...opts,
+        onDownloadProgress: (progress, chunk, file, lastProgress) => {
+          currentBytes += progress.transferredBytes - lastProgress.bytes
+          progress.percent = currentBytes / progress.totalBytes
+
+          // Don't do MULDL logs if there's a handler already
+          if (lastOnProgress) {
+            lastOnProgress(progress, chunk, file, lastProgress)
+          } else {
+            console.log(
+              `[MULDL] Total download: ${(progress.percent * 100).toFixed(2)}% (${currentBytes}/${progress.totalBytes})` +
+              (file.type ? ` (${file.type})` : '') +
+              ` | Currently downloading ${file.name}`
+            )
+          }
+        }
+      }
     }
+    const errs: Error[] = []
+
+    const chunks = splitArray(files.length/64, files)
+
+    for (const chunk of chunks) {
+      await Promise.all(chunk.map((file) =>
+        this.downloadSingleFile(file, opts).catch((err) => errs.push(err))
+      ))
+    }
+
     if (errs.length > 0) {
-      throw errs
+      console.log('[MULDL] ' + errs)
     }
   }
 
-  async verifyFile(dest: string, data: dlt.DownloaderVerify): Promise<boolean> {
-    const currentHash: string = await this.getHash(dest, data.algorithm)
-    if (currentHash != data.hash) return false
-    return true
+  async verifyFile<T>(file: dlt.DownloaderFile, opts: dlt.DownloaderOpts): Promise<T> {
+    const dest: string = path.resolve(file.dir, file.name!)
+    const currentHash: string = await this.getHash(dest, file.verify!.algorithm)
+    if (currentHash != file.verify!.hash) {
+      if (file.verify!.noRetry) {
+        fs.unlinkSync(dest)
+        throw `Failed to verify file ${file.name}`
+      }
+      return this.downloadSingleFile<T>({ ...file, verify: { ...file.verify!, noRetry: true } }, { ...opts, overwrite: true })
+    }
+    // console.log(`[DLVRF] Successfully verified file ${file.name}`)
+    return null as T
   }
   private getHash(dest: string, algorithm: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {

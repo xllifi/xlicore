@@ -1,4 +1,4 @@
-import { DownloadProgress } from "ky"
+import { DownloadProgress } from 'ky'
 
 export type DownloaderFile = {
   url: string
@@ -6,13 +6,14 @@ export type DownloaderFile = {
   name?: string
   size?: number
   verify?: DownloaderVerify
+  type?: 'assets' | 'libraries' | 'java'
 }
 
-export type DownloaderCallbackOnDownload = (progress: DownloadProgress, chunk: Uint8Array, file: DownloaderFile) => void
+export type DownloaderCallbackOnProgress = (progress: DownloadProgress, chunk: Uint8Array, file: DownloaderFile, lastProgress: DownloaderLastProgress) => void
 export type DownloaderCallbackOnFinish = (file: DownloaderFile) => void
 
 export type DownloaderOpts = {
-  onDownloadProgress?: DownloaderCallbackOnDownload
+  onDownloadProgress?: DownloaderCallbackOnProgress
   onDownloadFinish?: DownloaderCallbackOnFinish
   overwrite?: boolean
   getContent?: boolean
@@ -22,4 +23,9 @@ export type DownloaderVerify = {
   hash: string
   algorithm: 'sha1' | 'sha256' // todo add more algorithms if needed
   noRetry?: boolean
+}
+
+export type DownloaderLastProgress = {
+  timestamp: number
+  bytes: number
 }
