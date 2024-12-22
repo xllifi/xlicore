@@ -25,7 +25,7 @@ export async function getGlobalManifest(launch: Launch): Promise<GlobalManifest>
     overwrite: true,
     getContent: true
   }
-  return await launch.dl.downloadSingleFile<GlobalManifest>(file, opts)
+  return (await launch.dl.downloadSingleFile<GlobalManifest>(file, opts))!
 }
 
 export async function getVersionManifest(launch: Launch, version?: string, globalManifest?: GlobalManifest): Promise<VersionManifest> {
@@ -45,7 +45,7 @@ export async function getVersionManifest(launch: Launch, version?: string, globa
     getContent: true
   }
 
-  return await launch.dl.downloadSingleFile<VersionManifest>(file, opts)
+  return (await launch.dl.downloadSingleFile<VersionManifest>(file, opts))!
 }
 
 export async function getAssetIndex(launch: Launch, versionManifest: VersionManifest): Promise<AssetIndex> {
@@ -63,5 +63,5 @@ export async function getAssetIndex(launch: Launch, versionManifest: VersionMani
   const opts: DownloaderOpts = {
     getContent: true
   }
-  return await launch.dl.downloadSingleFile<AssetIndex>(file, opts)
+  return (await launch.dl.downloadSingleFile<AssetIndex>(file, opts))!
 }

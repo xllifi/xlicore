@@ -1,6 +1,6 @@
 import path from 'path'
 import { DownloaderFile } from '../../types/utils/Downloader.js'
-import { Launch } from '../../index.js'
+import { Launch } from '../../launch.js'
 import { mojangArchMapping, mojangOsMapping } from '../../utils/general.js'
 
 export async function downloadMinecraftLibraries(launch: Launch, versionManifest: VersionManifest): Promise<string[]> {

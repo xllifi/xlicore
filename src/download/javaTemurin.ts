@@ -4,7 +4,7 @@ import { DownloaderFile } from '../types/utils/Downloader.js'
 import path from 'path'
 import { TemurinMeta } from '../types/meta/java/TemurinMeta.js'
 import extract from 'extract-zip'
-import { Launch } from '../index.js'
+import { Launch } from '../launch.js'
 
 const osMapping: { [key: string]: string } = { win32: 'windows', linux: 'linux', darwin: 'mac' }
 const archMapping: { [key: string]: string } = { x64: 'x64', ia32: 'x86', arm64: 'aarch64', arm: 'arm' }

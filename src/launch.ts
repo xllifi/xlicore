@@ -11,6 +11,7 @@ import { Downloader } from './utils/downloader.js'
 import { existsSync, mkdirSync } from 'fs'
 import { downloadAssets } from './download/assets.js'
 import { buildArguments } from './arguments/minecraft.js'
+import { parseMrpack } from './download/modpack/parseMrpack.js'
 
 export class Launch {
   dl: Downloader
@@ -28,8 +29,8 @@ export class Launch {
   constructor(opts: LaunchOpts) {
     this.opts = opts
     this.dl = new Downloader(undefined, {
-      onDownloadProgress: opts.download?.onProgress,
-      onDownloadFinish: opts.download?.onFinish
+      onDownloadProgress: opts.callbacks?.dlOnProgress,
+      onDownloadFinish: opts.callbacks?.dlOnFinish
     })
   }
 
@@ -48,6 +49,7 @@ export class Launch {
     this.javaExePath = await downloadJava(this, this.versionManifest)
     this.assetPath = await downloadAssets(this, this.versionManifest)
     this.arguments = await buildArguments(this, this.versionManifest)
+    await parseMrpack(this, this.opts)
 
     console.log(`[launch.ts] JVM Arguments: ${JSON.stringify(this.arguments.jvm)}`)
     // console.log(`[launch.ts] Classpath: -cp ${this.classpath}`)
@@ -60,9 +62,13 @@ export class Launch {
     subprocess.stdout.on('data', (data: Buffer) => console.log('[MC LOGS] ' + data.toString().replace(/\n$/, '')))
     subprocess.stderr.setEncoding('utf8')
     subprocess.stderr.on('data', (data) => console.error('[MC LOGS] ' + data))
+
+    if (this.opts.callbacks?.gameOnExit) subprocess.on('exit', this.opts.callbacks.gameOnExit)
+    if (this.opts.callbacks?.gameOnError) subprocess.on('error', this.opts.callbacks.gameOnError)
   }
 
   private createProcess(): ChildProcessWithoutNullStreams {
+    if (this.opts.callbacks?.gameOnStart) this.opts.callbacks.gameOnStart()
     return spawn(
       this.javaExePath,
       [

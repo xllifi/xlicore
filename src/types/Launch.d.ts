@@ -1,4 +1,4 @@
-import { DownloaderCallbackOnFinish, DownloaderCallbackOnProgress } from './utils/Downloader.js'
+import { DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderVerify } from './utils/Downloader.js'
 
 export type LaunchOpts = {
   auth: string // TODO: Make actual auth!
@@ -7,19 +7,23 @@ export type LaunchOpts = {
   rootDir: string
   /** Minecraft version */
   version: string
-  /** Fabric settings */
-  fabric: {
-    /** `null` = latest */
-    version: string | null
+  /** Use to specify some fabric version. Fabric will still be downloaded even if you don't specify a version */
+  fabric?: {
+    version: string
   }
   /** Downloader settings */
-  download?: {
-    /** Progress callback. Use to track download progresses. */
-    onProgress?: DownloaderCallbackOnProgress
-    onFinish?: DownloaderCallbackOnFinish
+  callbacks?: {
+    /** Progress callback. Use to track download progresses */
+    dlOnProgress?: DownloaderCallbackOnProgress
+    /** Finish callback. Use to track download finishes */
+    dlOnFinish?: DownloaderCallbackOnFinish
+    /** Game start callback */
+    gameOnStart?: () => void
+    /** Game exit callback */
+    gameOnExit?: () => void
+    /** Game error callback */
+    gameOnError?: (err: Error) => void
   }
-  /** Verify files on each launch */ //TODO: implement
-  verify: boolean
   /** Minecraft options */
   gameOpts?: {
     /** Window settings */
@@ -37,12 +41,19 @@ export type LaunchOpts = {
       max: number
     }
   }
-  /** Launcher data. Optional. */
+  /** Launcher data. Optional */
   launcher?: {
     /** Launcher name */
     name: string
     /** Launcher version */
     version: string
+  }
+  /** `.mrpack` modpack */
+  mrpack?: {
+    /** Link to `.mrpack` download */
+    link: string,
+    /** If you want to verify the download */
+    verify?: DownloaderVerify
   }
 }
 

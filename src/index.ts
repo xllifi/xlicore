@@ -1,4 +1,6 @@
 import { Launch } from './launch.js'
+import { LaunchOpts, GameLaunchArguments } from './types/Launch.js'
+import { DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderFile, DownloaderLastProgress } from './types/utils/Downloader.js'
 
 // const launchOpts: LaunchOpts = {
 //   auth: 'xllifi',
@@ -21,4 +23,8 @@ import { Launch } from './launch.js'
 //   console.log(`\n\n\n\nCLASSPATH: "${[...minecraftCP, ...fabricCP].join(`;`)}"`)
 // })
 
-export { Launch as Launch }
+export {
+  Launch,
+  LaunchOpts, GameLaunchArguments,
+  DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderFile, DownloaderLastProgress
+}

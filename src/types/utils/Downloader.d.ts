@@ -6,7 +6,7 @@ export type DownloaderFile = {
   name?: string
   size?: number
   verify?: DownloaderVerify
-  type?: 'assets' | 'libraries' | 'java'
+  type?: 'assets' | 'libraries' | 'java' | 'modpack'
 }
 
 export type DownloaderCallbackOnProgress = (progress: DownloadProgress, chunk: Uint8Array, file: DownloaderFile, lastProgress: DownloaderLastProgress) => void
@@ -20,9 +20,12 @@ export type DownloaderOpts = {
 }
 
 export type DownloaderVerify = {
+  /** Hash string */
   hash: string
+  /** Hash algorithm. Accepts only SHA1 or SHA256 */
   algorithm: 'sha1' | 'sha256' // todo add more algorithms if needed
-  noRetry?: boolean
+  /** Used internally for limiting to only one retry download. Set to true if you don't want to retry downloads */
+  noDlRetry?: boolean
 }
 
 export type DownloaderLastProgress = {

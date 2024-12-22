@@ -15,7 +15,7 @@ export async function downloadAssets(launch: Launch, versionManifest: VersionMan
       algorithm: 'sha1'
     }
   }
-  const assetIndex: AssetIndex = await launch.dl.downloadSingleFile<AssetIndex>(file, { getContent: true })
+  const assetIndex: AssetIndex = (await launch.dl.downloadSingleFile<AssetIndex>(file, { getContent: true }))!
   const totalSize = Object.values(assetIndex.objects)
     .map((x) => x.size)
     .reduce((pV, x) => (pV += x))

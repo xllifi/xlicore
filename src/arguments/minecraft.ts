@@ -34,8 +34,8 @@ export function buildArguments(launch: Launch, versionManifest: VersionManifest)
     game.push(`--height ${launch.opts.gameOpts?.screen.height}`)
   }
   if (launch.opts.gameOpts?.memory) {
-    jvm.push(`-Xms ${launch.opts.gameOpts.memory.min}`)
-    jvm.push(`-Xmx ${launch.opts.gameOpts.memory.max}`)
+    jvm.push(`-Xms${launch.opts.gameOpts.memory.min}M`)
+    jvm.push(`-Xmx${launch.opts.gameOpts.memory.max}M`)
   }
 
   const jvmArgMap: { [key: string]: string } = {

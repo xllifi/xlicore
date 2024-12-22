@@ -1,31 +1,31 @@
 {
   "name": "xlicore",
   "version": "0.0.1",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "author": "xllifi",
   "license": "GPL-3.0-only",
   "type": "module",
   "private": true,
   "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
-    }
+    ".": "./dist/index.js"
   },
   "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.10.2",
     "eslint": "^9.16.0",
     "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.0"
   },
   "dependencies": {
-    "crypto": "^1.0.1",
     "extract-zip": "^2.0.1",
+    "fs-extra": "^11.2.0",
     "ky": "^1.7.3"
   },
   "scripts": {
-    "dev": "yarn tsx src/index.ts"
+    "dev": "yarn tsx src/test.ts",
+    "build": "yarn tsc"
   }
 }

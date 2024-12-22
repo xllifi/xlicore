@@ -17,14 +17,13 @@ export class Downloader {
     this.generalOpts = generalOpts || {}
   }
 
-  async downloadSingleFile<T>(file: dlt.DownloaderFile, opts: dlt.DownloaderOpts = {}): Promise<T> {
+  async downloadSingleFile<T>(file: dlt.DownloaderFile, opts: dlt.DownloaderOpts = {}): Promise<T | null> {
     opts = { ...this.generalOpts, ...opts }
     file.dir = path.resolve(file.dir)
 
-    if (!URL.canParse(file.url)) throw `Invald URL: ${file.url}`
-
     // Verify variables
-    if (file.name == null) file.name = file.url.split('/').pop()
+    if (!URL.canParse(file.url)) throw `Invald URL: ${file.url}`
+    if (file.name == null) file.name = getUrlFilename(file.url)
     if (!opts.onDownloadProgress)
       opts.onDownloadProgress = (progress) =>
         console.log(`[SINDL] Downloading ${file.name}${file.type ? ` (${file.type})` : ''}. Progress: ${(progress.percent * 100).toFixed(2)}% (${progress.transferredBytes}/${progress.totalBytes})`)
@@ -38,7 +37,7 @@ export class Downloader {
       if (opts.getContent) {
         return JSON.parse(fs.readFileSync(dest, { encoding: 'utf8' }))
       }
-      return null as T
+      return this.verifyFile(file, opts)
     }
 
     // Create request
@@ -59,7 +58,7 @@ export class Downloader {
     })
 
     // Write to file
-    return new Promise<T>((resolve, reject) => {
+    return new Promise<T | null>((resolve, reject) => {
       const writeStream: fs.WriteStream = fs.createWriteStream(dest + this.tempSuffix)
       const readableStream: Readable = Readable.fromWeb(resp.body! as ReadableStream)
       readableStream.pipe(writeStream)
@@ -81,10 +80,10 @@ export class Downloader {
         })
 
         if (file.verify) {
-          resolve(await this.verifyFile(file, opts))
+          resolve(this.verifyFile(file, opts))
         }
 
-        resolve(null as T)
+        resolve(null)
       })
       readableStream.on('error', (err) => reject(err))
     })
@@ -133,19 +132,19 @@ export class Downloader {
     }
   }
 
-  async verifyFile<T>(file: dlt.DownloaderFile, opts: dlt.DownloaderOpts): Promise<T> {
+  async verifyFile<T>(file: dlt.DownloaderFile, opts: dlt.DownloaderOpts): Promise<T | null> {
     const dest: string = path.resolve(file.dir, file.name!)
     const currentHash: string = await this.getHash(dest, file.verify!.algorithm)
     if (currentHash != file.verify!.hash) {
-      if (file.verify!.noRetry) {
+      if (file.verify!.noDlRetry) {
         fs.unlinkSync(dest)
         throw `Failed to verify file ${file.name}`
       }
-      return this.downloadSingleFile<T>({ ...file, verify: { ...file.verify!, noRetry: true } }, { ...opts, overwrite: true })
+      return this.downloadSingleFile<T>({ ...file, verify: { ...file.verify!, noDlRetry: true } }, { ...opts, overwrite: true })
     }
-    // console.log(`[DLVRF] Successfully verified file ${file.name}`)
-    return null as T
+    return null
   }
+
   private getHash(dest: string, algorithm: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const hash = crypto.createHash(algorithm)
@@ -162,4 +161,8 @@ export class Downloader {
       })
     })
   }
+}
+
+export function getUrlFilename(url: string): string {
+  return url.split('/').pop()!
 }

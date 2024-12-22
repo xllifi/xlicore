@@ -37,5 +37,5 @@ export async function getFabricLauncherMetaForVersion(launch: Launch, versionMan
   const opts: DownloaderOpts = {
     getContent: true
   }
-  return launch.dl.downloadSingleFile<FabricLauncherMeta>(file, opts)
+  return (await launch.dl.downloadSingleFile<FabricLauncherMeta>(file, opts))!
 }
