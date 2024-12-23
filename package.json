@@ -15,8 +15,8 @@
     "./package.json": "./package.json"
   },
   "files": [
-		"dist"
-	],
+    "dist"
+  ],
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.10.2",
@@ -35,6 +35,6 @@
   },
   "scripts": {
     "dev": "tsx src/test.ts",
-    "build": "tsc"
+    "build": "rimraf dist store && tsc"
   }
 }
