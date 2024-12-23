@@ -1,6 +1,6 @@
 // Types for version links found on https://piston-meta.mojang.com/mc/game/version_manifest_v2.json
 
-type VersionManifest = {
+export type VersionManifest = {
   /** Must-have arguments. */
   arguments: VersionManifestArguments
   /** Assets list. */
@@ -48,14 +48,14 @@ type VersionManifest = {
   type: string
 }
 
-type VersionManifestArguments = {
+export type VersionManifestArguments = {
   /** Minecraft arguments. Put **after** `-jar` argument. */
-  game: Array<string | VersionManifestArgumentsRule>
+  game: Array<string | VersionManifestGameArgumentsRule>
   /** JVM arguments. Put **before** `-jar` argument. */
-  jvm: Array<string | VersionManifestArgumentsRule>
+  jvm: Array<string | VersionManifestJvmArgumentsRule>
 }
 
-type VersionManifestGameArgumentsRule = {
+export type VersionManifestGameArgumentsRule = {
   /** Some conditions according to which this should apply. */
   rules: Array<{
     /** Action. Should launcher add it (`allow`) or not (`disallow`). */
@@ -67,7 +67,7 @@ type VersionManifestGameArgumentsRule = {
   value: string | Array<string>
 }
 
-type VersionManifestJvmArgumentsRule = {
+export type VersionManifestJvmArgumentsRule = {
   /** Some conditions according to which this should apply. */
   rules: Array<{
     /** Action. Should launcher add it (`allow`) or not (`disallow`). */
@@ -82,7 +82,7 @@ type VersionManifestJvmArgumentsRule = {
   value: string | Array<string>
 }
 
-type VersionManifestAssetIndex = {
+export type VersionManifestAssetIndex = {
   /** Used for `--assetIndex` game argument. */
   id: string
   /** SHA1 checksum. */
@@ -95,7 +95,7 @@ type VersionManifestAssetIndex = {
   url: string
 }
 
-type VersionManifestDownloadsEntry = {
+export type VersionManifestDownloadsEntry = {
   /** SHA1 checksum. */
   sha1: string
   /** File size in bytes. */
@@ -104,7 +104,7 @@ type VersionManifestDownloadsEntry = {
   url: string
 }
 
-type VersionManifestLibrariesEntry = {
+export type VersionManifestLibrariesEntry = {
   /** */
   downloads: {
     artifact: VersionManifestLibrariesEntryArtifact
@@ -114,7 +114,7 @@ type VersionManifestLibrariesEntry = {
   /** Some conditions according to which you should download this. */
   rules?: Array<VersionManifestLibrariesEntryRule>
 }
-type VersionManifestLibrariesEntryArtifact = {
+export type VersionManifestLibrariesEntryArtifact = {
   /** Where should you save the library. Used for `-cp` argument. */
   path: string
   /** SHA1 checksum. */
@@ -125,7 +125,7 @@ type VersionManifestLibrariesEntryArtifact = {
   url: string
 }
 
-type VersionManifestLibrariesEntryRule = {
+export type VersionManifestLibrariesEntryRule = {
   /** Action. Should launcher download it (`allow`) or not (`disallow`). */
   action: string
   /** Some OS data. */
@@ -137,7 +137,7 @@ type VersionManifestLibrariesEntryRule = {
   }
 }
 
-type VersionManifestLoggingEntry = {
+export type VersionManifestLoggingEntry = {
   argument: string
   file: {
     id: string

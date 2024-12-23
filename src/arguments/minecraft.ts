@@ -1,5 +1,6 @@
 import { Launch } from '../launch.js'
-import { GameLaunchArguments } from '../types/Launch.js'
+import type { GameLaunchArguments } from '../types/Launch.ts'
+import { VersionManifest, VersionManifestGameArgumentsRule, VersionManifestJvmArgumentsRule } from '../types/meta/minecraft/VersionManifest.js'
 import { mojangArchMapping, mojangOsMapping } from '../utils/general.js'
 
 export function buildArguments(launch: Launch, versionManifest: VersionManifest): GameLaunchArguments {

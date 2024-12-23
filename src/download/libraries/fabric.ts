@@ -1,8 +1,8 @@
 import path from 'path'
-import { FabricLauncherMeta, FabricLauncherMetaDownload } from '../../types/meta/fabric/FabricLauncherMeta.js'
-import { DownloaderFile } from '../../types/utils/Downloader.js'
+import type { FabricLauncherMeta, FabricLauncherMetaDownload } from '../../types/meta/fabric/FabricLauncherMeta.ts'
+import type { DownloaderFile } from '../../types/utils/Downloader.js'
+import type { MavenParserReturn } from '../../types/utils/MavenParser.js'
 import { mavenParse } from '../../utils/mavenParser.js'
-import { MavenParserReturn } from '../../types/utils/MavenParser.js'
 import ky from 'ky'
 import { Launch } from '../../launch.js'
 
@@ -27,7 +27,6 @@ export async function downloadFabricLibraries(launch: Launch, fabricLauncherMeta
     dir: path.resolve(launch.opts.rootDir, 'libraries', loaderResolved.filedir),
     name: loaderResolved.filename,
     type: 'libraries',
-    size: totalSize,
     verify: {
       hash: await ky.get<string>(loaderResolved.url + '.sha1').text(),
       algorithm: 'sha1'
@@ -41,7 +40,6 @@ export async function downloadFabricLibraries(launch: Launch, fabricLauncherMeta
     dir: path.resolve(launch.opts.rootDir, 'libraries', intermediaryResolved.filedir),
     name: intermediaryResolved.filename,
     type: 'libraries',
-    size: totalSize,
     verify: {
       hash: await ky.get<string>(intermediaryResolved.url + '.sha1').text(),
       algorithm: 'sha1'
@@ -59,7 +57,6 @@ export async function downloadFabricLibraries(launch: Launch, fabricLauncherMeta
       dir: path.resolve(launch.opts.rootDir, 'libraries', resolved.filedir),
       name: resolved.filename,
       type: 'libraries',
-      size: totalSize,
       verify: {
         hash: lib.sha1,
         algorithm: 'sha1'
@@ -70,6 +67,6 @@ export async function downloadFabricLibraries(launch: Launch, fabricLauncherMeta
   }
 
   // Download and return classpath
-  await launch.dl.downloadMultipleFiles(files)
+  await launch.dl.downloadMultipleFiles(files, {totalSize})
   return cp
 }

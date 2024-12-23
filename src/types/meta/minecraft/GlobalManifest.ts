@@ -1,13 +1,13 @@
 // Types for https://launchermeta.mojang.com/mc/game/version_manifest_v2.json
 
-type GlobalManifest = {
+export type GlobalManifest = {
   latest: {
     release: string
     snapshot: string
   }
   versions: Array<GlobalManifestVersion>
 }
-type GlobalManifestVersion = {
+export type GlobalManifestVersion = {
   /** Minecraft version */
   id: string
   /** Release type */

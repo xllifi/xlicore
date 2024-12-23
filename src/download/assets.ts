@@ -1,6 +1,11 @@
 import { Launch } from '../launch.js'
-import { DownloaderFile } from '../types/utils/Downloader.js'
+import { AssetIndex, AssetIndexObject } from '../types/meta/minecraft/AssetIndex.js'
+import { VersionManifest } from '../types/meta/minecraft/VersionManifest.js'
+import type { DownloaderFile } from '../types/utils/Downloader.js'
 import path from 'path'
+import fs from 'fs'
+import fsp from 'fs/promises'
+import { getUniqueArrayBy } from '../utils/general.js'
 
 export async function downloadAssets(launch: Launch, versionManifest: VersionManifest): Promise<string> {
   const assetRoot: string = path.resolve(launch.opts.rootDir, 'assets')
@@ -16,18 +21,24 @@ export async function downloadAssets(launch: Launch, versionManifest: VersionMan
     }
   }
   const assetIndex: AssetIndex = (await launch.dl.downloadSingleFile<AssetIndex>(file, { getContent: true }))!
-  const totalSize = Object.values(assetIndex.objects)
-    .map((x) => x.size)
-    .reduce((pV, x) => (pV += x))
+  const assets: AssetIndexObject[] = getUniqueArrayBy(Object.values(assetIndex.objects), 'hash')
+
+  // If there's assetIndex downloaded there's a good chance all other assets are as well. This checks if they are downloaded.
+  if (fs.existsSync(path.resolve(file.dir, file.name!))) {
+    const objectDirs: string[] = await fsp.readdir(path.resolve(assetRoot, 'objects'))
+    const files: string[] = (await Promise.all(objectDirs.map(x => fsp.readdir(path.resolve(assetRoot, 'objects', x))))).flat().sort()
+    const assetsHashes: string[] = assets.map(x => x.hash).sort()
+    if (files.filter(x => !assetsHashes.includes(x)).length <= 0) return assetRoot
+  }
+
   const files: DownloaderFile[] = []
-  for (const asset of Object.values(assetIndex.objects)) {
+  for (const asset of assets) {
     console.log(`Populating asset filelist`)
     const file: DownloaderFile = {
       url: `https://resources.download.minecraft.net/${asset.hash.substring(0, 2)}/${asset.hash}`,
       dir: path.resolve(assetRoot, 'objects', asset.hash.substring(0, 2)),
       name: `${asset.hash}`,
       type: 'assets',
-      size: totalSize,
       verify: {
         hash: asset.hash,
         algorithm: 'sha1'
@@ -36,6 +47,10 @@ export async function downloadAssets(launch: Launch, versionManifest: VersionMan
     files.push(file)
   }
   console.log(`Submitting asset filelist`)
-  await launch.dl.downloadMultipleFiles(files)
+  await launch.dl.downloadMultipleFiles(files, {
+    totalSize: Object.values(assetIndex.objects)
+      .map((x) => x.size)
+      .reduce((pV, x) => (pV += x))
+  })
   return assetRoot
 }

@@ -1,4 +1,4 @@
-import { MavenParserReturn } from '../types/utils/MavenParser.js'
+import type { MavenParserReturn } from '../types/utils/MavenParser.js'
 
 /**
  * Util for parsing maven downloads from Fabric's LauncherMeta

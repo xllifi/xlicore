@@ -1,5 +1,5 @@
 import { DownloadProgress } from 'ky'
-import { DownloaderLastProgress } from '../types/utils/Downloader.js'
+import type { DownloaderLastProgress } from '../types/utils/Downloader.js'
 
 export const mojangOsMapping: { [key: string]: string } = { win32: 'windows', darwin: 'osx', linux: 'linux' }
 export const mojangArchMapping: { [key: string]: string } = { x64: 'x64', ie32: 'x86' }
@@ -28,11 +28,16 @@ export function sleep(ms: number): Promise<void> {
   })
 }
 
-export function splitArray<T>(length: number, array: T[]): T[][] {
+export function splitArray<T>(amount: number, array: T[]): T[][] {
   const chunks = []
-  for (let i = 0; i < array.length; i += length) {
-    const chunk = array.slice(i, i + length)
+  const chunkLength = array.length / amount
+
+  for (let i = 0; i < array.length; i += chunkLength) {
+    const chunk = array.slice(i, i + chunkLength)
     chunks.push(chunk)
   }
   return chunks
+}
+export function getUniqueArrayBy<T extends Record<string, unknown>>(arr: Array<T>, key: string): Array<T> {
+  return [...new Map(arr.map(item => [item[key], item])).values()]
 }

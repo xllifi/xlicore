@@ -1,7 +1,7 @@
 import ky from 'ky'
 import * as fs from 'fs'
 import * as fsp from 'fs/promises'
-import * as dlt from '../types/utils/Downloader.js'
+import type * as dlt from '../types/utils/Downloader.js'
 import path from 'path'
 import { Readable } from 'stream'
 import { ReadableStream } from 'stream/web'
@@ -23,7 +23,11 @@ export class Downloader {
 
     // Verify variables
     if (!URL.canParse(file.url)) throw `Invald URL: ${file.url}`
-    if (file.name == null) file.name = getUrlFilename(file.url)
+    if (!file.name) file.name = getUrlFilename(file.url)
+    if (!file.size) {
+      const clHeader = await ky.head(file.url).then(res => res.headers.get('content-length'))
+      if (clHeader) file.size = parseInt(clHeader)
+    }
     if (!opts.onDownloadProgress)
       opts.onDownloadProgress = (progress) =>
         console.log(`[SINDL] Downloading ${file.name}${file.type ? ` (${file.type})` : ''}. Progress: ${(progress.percent * 100).toFixed(2)}% (${progress.transferredBytes}/${progress.totalBytes})`)
@@ -37,7 +41,7 @@ export class Downloader {
       if (opts.getContent) {
         return JSON.parse(fs.readFileSync(dest, { encoding: 'utf8' }))
       }
-      return this.verifyFile(file, opts)
+      return null
     }
 
     // Create request
@@ -92,8 +96,7 @@ export class Downloader {
   async downloadMultipleFiles(files: dlt.DownloaderFile[], opts: dlt.DownloaderOpts = {}): Promise<void> {
     opts = { ...this.generalOpts, ...opts }
 
-    // If there's size specified for every file then do total DL
-    if (files.filter((x) => x.size).length == files.length) {
+    if (opts.totalSize) {
       console.log(`Doing total DL`)
 
       let lastOnProgress: dlt.DownloaderCallbackOnProgress
@@ -102,16 +105,16 @@ export class Downloader {
       let currentBytes: number = 0
       opts = {
         ...opts,
-        onDownloadProgress: (progress, chunk, file, lastProgress) => {
+        onDownloadProgress(progress, chunk, file, lastProgress) {
           currentBytes += progress.transferredBytes - lastProgress.bytes
-          progress.percent = currentBytes / progress.totalBytes
+          progress.percent = currentBytes / opts.totalSize!
 
           // Don't do MULDL logs if there's a handler already
           if (lastOnProgress) {
             lastOnProgress(progress, chunk, file, lastProgress)
           } else {
             console.log(
-              `[MULDL] Total download: ${(progress.percent * 100).toFixed(2)}% (${currentBytes}/${progress.totalBytes})` +
+              `[MULDL] Total download: ${(progress.percent * 100).toFixed(2)}% (${currentBytes}/${opts.totalSize})` +
                 (file.type ? ` (${file.type})` : '') +
                 ` | Currently downloading ${file.name}`
             )
@@ -121,7 +124,7 @@ export class Downloader {
     }
     const errs: Error[] = []
 
-    const chunks = splitArray(files.length / 64, files)
+    const chunks = files.length > 64 ? splitArray(files.length / 64, files) : [files]
 
     for (const chunk of chunks) {
       await Promise.all(chunk.map((file) => this.downloadSingleFile(file, opts).catch((err) => errs.push(err))))
@@ -142,6 +145,7 @@ export class Downloader {
       }
       return this.downloadSingleFile<T>({ ...file, verify: { ...file.verify!, noDlRetry: true } }, { ...opts, overwrite: true })
     }
+    opts.onDownloadFinish!(file)
     return null
   }
 

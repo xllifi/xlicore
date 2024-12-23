@@ -1,9 +1,10 @@
 import ky from 'ky'
-import { FabricLauncherMeta } from '../types/meta/fabric/FabricLauncherMeta.js'
-import { DownloaderFile, DownloaderOpts } from '../types/utils/Downloader.js'
+import type { FabricLauncherMeta } from '../types/meta/fabric/FabricLauncherMeta.ts'
+import type { DownloaderFile, DownloaderOpts } from '../types/utils/Downloader.js'
+import type { FabricVersionsLoader } from '../types/meta/fabric/FabricLoader.js'
 import path from 'path'
-import { FabricVersionsLoader } from '../types/meta/fabric/FabricLoader.js'
 import { Launch } from '../launch.js'
+import { VersionManifest } from '../types/meta/minecraft/VersionManifest.js'
 
 const fabricMetaMain: URL = new URL('https://meta.fabricmc.net/')
 const fabricMetaFallback: URL = new URL('https://meta2.fabricmc.net/')

@@ -51,7 +51,7 @@ export type LaunchOpts = {
   /** `.mrpack` modpack */
   mrpack?: {
     /** Link to `.mrpack` download */
-    link: string,
+    url: string,
     /** If you want to verify the download */
     verify?: DownloaderVerify
   }

@@ -1,13 +1,12 @@
 import path from 'path'
-import { DownloaderFile } from '../../types/utils/Downloader.js'
+import type { DownloaderFile } from '../../types/utils/Downloader.js'
 import { Launch } from '../../launch.js'
 import { mojangArchMapping, mojangOsMapping } from '../../utils/general.js'
+import { VersionManifest } from '../../types/meta/minecraft/VersionManifest.js'
 
 export async function downloadMinecraftLibraries(launch: Launch, versionManifest: VersionManifest): Promise<string[]> {
   const files: DownloaderFile[] = []
   const cp: string[] = []
-
-  const totalSize: number = versionManifest.libraries.map((x) => x.downloads.artifact.size).reduce((partialSum, x) => partialSum + x, 0) + versionManifest.downloads.client.size
 
   libLoop: for (const lib of versionManifest.libraries) {
     if (lib.rules)
@@ -22,7 +21,6 @@ export async function downloadMinecraftLibraries(launch: Launch, versionManifest
       dir: path.resolve(launch.opts.rootDir, 'libraries', path.dirname(lib.downloads.artifact.path)),
       name: path.basename(lib.downloads.artifact.path),
       type: 'libraries',
-      size: totalSize,
       verify: {
         hash: lib.downloads.artifact.sha1,
         algorithm: 'sha1'
@@ -36,7 +34,6 @@ export async function downloadMinecraftLibraries(launch: Launch, versionManifest
     dir: path.resolve(launch.opts.rootDir, 'version', versionManifest.id),
     name: `${versionManifest.id}.jar`,
     type: 'libraries',
-    size: totalSize,
     verify: {
       hash: versionManifest.downloads.client.sha1,
       algorithm: 'sha1'
@@ -44,6 +41,8 @@ export async function downloadMinecraftLibraries(launch: Launch, versionManifest
   }
   files.push(clientJarFile)
   cp.push(path.resolve(clientJarFile.dir, clientJarFile.name!))
-  await launch.dl.downloadMultipleFiles(files)
+  await launch.dl.downloadMultipleFiles(files, {
+    totalSize: versionManifest.libraries.map((x) => x.downloads.artifact.size).reduce((partialSum, x) => partialSum + x, 0) + versionManifest.downloads.client.size
+  })
   return cp
 }

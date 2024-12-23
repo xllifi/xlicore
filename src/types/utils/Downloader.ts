@@ -17,6 +17,7 @@ export type DownloaderOpts = {
   onDownloadFinish?: DownloaderCallbackOnFinish
   overwrite?: boolean
   getContent?: boolean
+  totalSize?: number
 }
 
 export type DownloaderVerify = {

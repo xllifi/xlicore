@@ -1,23 +1,22 @@
-import { Launch } from "../../launch.js";
-import { LaunchOpts } from "../../types/Launch.js";
-// import { MrpackMeta } from "../../types/meta/mrpack/MrpackMeta.js";
-import { DownloaderFile } from "../../types/utils/Downloader.js";
-import { getUrlFilename } from "../../utils/downloader.js";
+import { Launch } from '../../launch.js'
+import type { LaunchOpts } from '../../types/Launch.ts'
+import type { MrpackMeta } from '../../types/meta/mrpack/MrpackMeta.ts'
+import type { DownloaderFile } from '../../types/utils/Downloader.js'
+import { getUrlFilename } from '../../utils/downloader.js'
 import fs from 'fs'
 import fse from 'fs-extra'
 import fsp from 'fs/promises'
-import path from "path";
-import extract from "extract-zip";
-import { MrpackMeta } from "../../types/meta/mrpack/MrpackMeta.js";
+import path from 'path'
+import extract from 'extract-zip'
 
 export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<void> {
-  if (!opts.mrpack) return
-  if (!URL.canParse(opts.mrpack?.link)) throw `Invald URL: ${opts.mrpack?.link}`
+  if (!opts.mrpack || fs.existsSync(path.resolve(launch.instancePath, 'modrinth.index.json'))) return
+  if (!URL.canParse(opts.mrpack?.url)) throw `Invald URL: ${opts.mrpack?.url}`
 
   const file: DownloaderFile = {
-    url: opts.mrpack?.link,
+    url: opts.mrpack?.url,
     dir: launch.instancePath,
-    name: getUrlFilename(opts.mrpack?.link),
+    name: getUrlFilename(opts.mrpack?.url),
     type: 'modpack',
     verify: opts.mrpack.verify ? { hash: opts.mrpack.verify.hash, algorithm: opts.mrpack.verify.algorithm } : undefined
   }
@@ -31,11 +30,7 @@ export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<voi
   fs.unlinkSync(dest)
   await fse.move(path.resolve(launch.instancePath, 'overrides'), launch.instancePath, console.error)
 
-  const mrpackMeta: MrpackMeta = await fsp.readFile(path.resolve(file.dir, 'modrinth.index.json'), {encoding: 'utf8'}).then((res) => JSON.parse(res))
-
-  const totalSize = Object.values(mrpackMeta.files)
-  .map((x) => x.fileSize)
-  .reduce((pV, x) => (pV += x))
+  const mrpackMeta: MrpackMeta = await fsp.readFile(path.resolve(file.dir, 'modrinth.index.json'), { encoding: 'utf8' }).then((res) => JSON.parse(res))
 
   const dlFiles: DownloaderFile[] = []
   for (const file of mrpackMeta.files) {
@@ -46,7 +41,6 @@ export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<voi
       url: file.downloads[0],
       dir: path.dirname(dest),
       name: path.basename(dest),
-      size: totalSize,
       type: 'modpack',
       verify: {
         hash: file.hashes.sha1,
@@ -55,5 +49,9 @@ export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<voi
     }
     dlFiles.push(dlFile)
   }
-  await launch.dl.downloadMultipleFiles(dlFiles)
+  await launch.dl.downloadMultipleFiles(dlFiles, {
+    totalSize: Object.values(mrpackMeta.files)
+      .map((x) => x.fileSize)
+      .reduce((pV, x) => (pV += x))
+  })
 }

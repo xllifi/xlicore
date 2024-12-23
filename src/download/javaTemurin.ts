@@ -1,10 +1,11 @@
 import ky from 'ky'
 import fs from 'fs'
-import { DownloaderFile } from '../types/utils/Downloader.js'
+import type { DownloaderFile } from '../types/utils/Downloader.js'
+import type { TemurinMeta } from '../types/meta/java/TemurinMeta.ts'
 import path from 'path'
-import { TemurinMeta } from '../types/meta/java/TemurinMeta.js'
 import extract from 'extract-zip'
 import { Launch } from '../launch.js'
+import { VersionManifest } from '../types/meta/minecraft/VersionManifest.js'
 
 const osMapping: { [key: string]: string } = { win32: 'windows', linux: 'linux', darwin: 'mac' }
 const archMapping: { [key: string]: string } = { x64: 'x64', ia32: 'x86', arm64: 'aarch64', arm: 'arm' }

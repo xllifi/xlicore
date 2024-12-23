@@ -20,7 +20,7 @@ export type FabricLauncherMeta = {
   }
 }
 
-type FabricLauncherMetaDownload = {
+export type FabricLauncherMetaDownload = {
   name: string
   url: string
   md5: string

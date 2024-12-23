@@ -1,6 +1,6 @@
 import { Launch } from './launch.js'
-import { LaunchOpts, GameLaunchArguments } from './types/Launch.js'
-import { DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderFile, DownloaderLastProgress } from './types/utils/Downloader.js'
+import type { LaunchOpts, GameLaunchArguments } from './types/Launch.ts'
+import type { DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderFile, DownloaderLastProgress } from './types/utils/Downloader.js'
 
 // const launchOpts: LaunchOpts = {
 //   auth: 'xllifi',

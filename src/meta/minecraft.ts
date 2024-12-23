@@ -1,8 +1,11 @@
 import path from 'path'
-import { DownloaderFile, DownloaderOpts } from '../types/utils/Downloader.js'
+import type { DownloaderFile, DownloaderOpts } from '../types/utils/Downloader.js'
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { Launch } from '../launch.js'
+import { GlobalManifest, GlobalManifestVersion } from '../types/meta/minecraft/GlobalManifest.js'
+import { VersionManifest, VersionManifestAssetIndex } from '../types/meta/minecraft/VersionManifest.js'
+import { AssetIndex } from '../types/meta/minecraft/AssetIndex.js'
 
 export async function getGlobalManifest(launch: Launch): Promise<GlobalManifest> {
   const dir: string = path.resolve(launch.opts.rootDir, 'version')
