@@ -6,7 +6,7 @@ export type DownloaderFile = {
   name?: string
   size?: number
   verify?: DownloaderVerify
-  type?: 'assets' | 'libraries' | 'java' | 'modpack'
+  type: 'assets' | 'libraries' | 'java' | 'modpack' | 'meta'
 }
 
 export type DownloaderCallbackOnProgress = (progress: DownloadProgress, chunk: Uint8Array, file: DownloaderFile, lastProgress: DownloaderLastProgress) => void

@@ -22,7 +22,8 @@ export async function getGlobalManifest(launch: Launch): Promise<GlobalManifest>
   const file: DownloaderFile = {
     url: 'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json',
     dir,
-    name
+    name,
+    type: 'meta'
   }
   const opts: DownloaderOpts = {
     overwrite: true,
@@ -39,6 +40,7 @@ export async function getVersionManifest(launch: Launch, version?: string, globa
     url: gmEntry.url,
     dir: path.resolve(launch.opts.rootDir, 'version', gmEntry.id),
     name: `${gmEntry.id}.json`,
+    type: 'meta',
     verify: {
       hash: gmEntry.sha1,
       algorithm: 'sha1'
@@ -57,6 +59,7 @@ export async function getAssetIndex(launch: Launch, versionManifest: VersionMani
     url: assetIndex.url,
     dir: path.resolve(launch.opts.rootDir, 'assets/indexes'),
     name: `${assetIndex.id}.json`,
+    type: 'meta',
     size: assetIndex.size,
     verify: {
       hash: assetIndex.sha1,

@@ -33,7 +33,8 @@ export async function getFabricLauncherMetaForVersion(launch: Launch, versionMan
   const file: DownloaderFile = {
     url: `${fabricMeta}/v2/versions/loader/${versionManifest.id}/${fabricVersion}`,
     dir: path.resolve(launch.opts.rootDir, 'version', versionManifest.id),
-    name: `fabric-${fabricVersion}.json`
+    name: `fabric-${fabricVersion}.json`,
+    type: 'meta'
   }
   const opts: DownloaderOpts = {
     getContent: true
