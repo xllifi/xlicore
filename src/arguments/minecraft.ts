@@ -7,6 +7,7 @@ export function buildArguments(launch: Launch, versionManifest: VersionManifest)
   let jvm: string[] = []
   let game: string[] = []
 
+  // Manifested arguments
   jvmArgLoop: for (const jvmArg of versionManifest.arguments.jvm) {
     if (isRuledJvmArgument(jvmArg)) {
       for (const rule of jvmArg.rules) {
@@ -30,15 +31,26 @@ export function buildArguments(launch: Launch, versionManifest: VersionManifest)
     if (isRuledGameArgument(gameArg)) continue gameArgLoop
     game.push(gameArg)
   }
-  if (launch.opts.gameOpts?.screen) {
-    game.push(`--width ${launch.opts.gameOpts?.screen.width}`)
-    game.push(`--height ${launch.opts.gameOpts?.screen.height}`)
-  }
+
+  // Custom JVM arguments
   if (launch.opts.gameOpts?.memory) {
     jvm.push(`-Xms${launch.opts.gameOpts.memory.min}M`)
     jvm.push(`-Xmx${launch.opts.gameOpts.memory.max}M`)
   }
+  if (launch.opts.auth.type == 'drasl') {
+    jvm.push(`-Dminecraft.api.env=custom`)
+    jvm.push(`-Dminecraft.api.auth.host=${launch.opts.auth.server}/auth`)
+    jvm.push(`-Dminecraft.api.account.host=${launch.opts.auth.server}/account`)
+    jvm.push(`-Dminecraft.api.session.host=${launch.opts.auth.server}/session`)
+    jvm.push(`-Dminecraft.api.services.host=${launch.opts.auth.server}/services`)
+  }
+  // Custom game arguments
+  if (launch.opts.gameOpts?.screen) {
+    game.push(`--width ${launch.opts.gameOpts?.screen.width}`)
+    game.push(`--height ${launch.opts.gameOpts?.screen.height}`)
+  }
 
+  // Argument maps
   const jvmArgMap: { [key: string]: string } = {
     '-Dminecraft.launcher.brand=${launcher_name}': `-Dminecraft.launcher.brand=${launch.opts.launcher?.name || 'xlicore'}`,
     '-Dminecraft.launcher.version=${launcher_version}': `-Dminecraft.launcher.version=${launch.opts.launcher?.name || 'unknown'}`,
@@ -51,27 +63,31 @@ export function buildArguments(launch: Launch, versionManifest: VersionManifest)
   }
   const gameArgMap: { [key: string]: string } = {
     '${version_name}': launch.opts.version,
+    '${version_type}': launch.versionManifest.type,
     '${game_directory}': launch.instancePath,
     '${assets_root}': launch.assetPath,
     '${assets_index_name}': launch.versionManifest.assetIndex.id,
-    '${auth_uuid}': '', //TODO: actual auth
-    '${auth_player_name}': 'xllifi', //TODO: same as above
-    '${auth_access_token}': '0', //TODO: same as above
-    '${clientid}': '', //TODO: same as above
-    '${user_type}': 'Mojang',
-    '${version_type}': launch.versionManifest.type,
+    '${user_type}': launch.auth.userType,
+    '${auth_player_name}': launch.auth.name,
+    '${auth_uuid}': launch.auth.uuid || '',
+    '${auth_access_token}': launch.auth.accessToken || '',
+    '${clientid}': launch.auth.clientId || '',
 
-    '--uuid': '',
-    '--clientId': '',
-    '--xuid': ''
+    '--clientId': launch.auth.clientId ? '--clientId' : '',
+    '--accessToken': launch.auth.accessToken ? '--accessToken' : '',
+    '--uuid': launch.auth.uuid ? '--uuid' : '',
+    '--xuid': '',
+    '${auth_xuid}': ''
   }
 
+  // Use argument maps to assign correct values
   for (const arg in jvm) {
     if (Object.keys(jvmArgMap).includes(jvm[arg])) jvm[arg] = jvmArgMap[jvm[arg]]
   }
   for (const arg in game) {
     if (Object.keys(gameArgMap).includes(game[arg])) game[arg] = gameArgMap[game[arg]]
   }
+  // Strip zero-length entries
   jvm = jvm.filter((x) => x.length > 0)
   game = game.filter((x) => x.length > 0)
 

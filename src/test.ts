@@ -3,8 +3,12 @@ import type { LaunchOpts } from './types/Launch.ts'
 import { Launch } from './launch.js'
 
 const launchOpts: LaunchOpts = {
-  auth: 'xllifi',
-  authserver: '',
+  auth: {
+    type: 'drasl',
+    username: 'xllifi',
+    password: '[REDACTED]',
+    server: '[REDACTED]'
+  },
   rootDir: path.resolve(process.cwd(), 'store'),
   version: '1.21.1',
   mrpack: {

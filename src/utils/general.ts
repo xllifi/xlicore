@@ -1,5 +1,8 @@
 import { DownloadProgress } from 'ky'
 import type { DownloaderLastProgress } from '../types/utils/Downloader.js'
+import fsp from 'fs/promises'
+import path from 'path'
+import { rimraf } from 'rimraf'
 
 export const mojangOsMapping: { [key: string]: string } = { win32: 'windows', darwin: 'osx', linux: 'linux' }
 export const mojangArchMapping: { [key: string]: string } = { x64: 'x64', ie32: 'x86' }
@@ -39,5 +42,22 @@ export function splitArray<T>(amount: number, array: T[]): T[][] {
   return chunks
 }
 export function getUniqueArrayBy<T extends Record<string, unknown>>(arr: Array<T>, key: string): Array<T> {
-  return [...new Map(arr.map(item => [item[key], item])).values()]
+  return [...new Map(arr.map((item) => [item[key], item])).values()]
+}
+
+export async function mvDir(srcDir: string, destDir: string): Promise<void> {
+  const filenames: string[] = (await fsp.readdir(srcDir, { recursive: true })).reverse()
+  console.log(`Moving files: ${filenames}`)
+  await Promise.all(
+    filenames.map(async (x) => {
+      // console.log(`Moving file: ${x}`)
+      const stat = await fsp.stat(path.resolve(srcDir, x))
+      if (stat.isFile()) {
+        await fsp.cp(path.resolve(srcDir, x), path.resolve(destDir, x), { recursive: true })
+        await fsp.unlink(path.resolve(srcDir, x))
+      }
+    })
+  ).then(async () => {
+    await rimraf(srcDir)
+  })
 }

@@ -9,10 +9,13 @@ import type { GameLaunchArguments, LaunchOpts } from './types/Launch.ts'
 import type { FabricLauncherMeta } from './types/meta/fabric/FabricLauncherMeta.ts'
 import type { VersionManifest } from './types/meta/minecraft/VersionManifest.ts'
 import { Downloader } from './utils/downloader.js'
-import { existsSync, mkdirSync } from 'fs'
+import fs from 'fs'
+import fsp from 'fs/promises'
 import { downloadAssets } from './download/assets.js'
 import { buildArguments } from './arguments/minecraft.js'
 import { parseMrpack } from './download/modpack/parseMrpack.js'
+import { DraslAuth } from './auth/drasl.js'
+import { launchCredentials } from './types/meta/drasl/launchCredentials.js'
 
 export class Launch {
   dl: Downloader
@@ -26,6 +29,7 @@ export class Launch {
   javaExePath: string = ''
   assetPath: string = ''
   instancePath: string = ''
+  auth: launchCredentials = {} as launchCredentials
 
   constructor(opts: LaunchOpts) {
     this.opts = opts
@@ -36,12 +40,11 @@ export class Launch {
   }
 
   async start(): Promise<void> {
+    this.instancePath = path.resolve(this.opts.rootDir, 'instance')
+    if (!fs.existsSync(this.instancePath)) await fsp.mkdir(this.instancePath, { recursive: true })
+
     this.versionManifest = await getVersionManifest(this, this.opts.version)
     this.fabricMeta = await getFabricLauncherMetaForVersion(this, this.versionManifest)
-
-    // Create instance directory
-    this.instancePath = path.resolve(this.opts.rootDir, 'instance')
-    if (!existsSync(this.instancePath)) mkdirSync(this.instancePath, { recursive: true })
 
     // Download
     const fabricCP = await downloadFabricLibraries(this, this.fabricMeta)
@@ -49,9 +52,29 @@ export class Launch {
     this.classpath = [...fabricCP, ...minecraftCP].join(';')
     this.javaExePath = await downloadJava(this, this.versionManifest)
     this.assetPath = await downloadAssets(this, this.versionManifest)
-    this.arguments = await buildArguments(this, this.versionManifest)
     await parseMrpack(this, this.opts)
 
+    // Auth
+    switch (this.opts.auth.type) {
+      case 'drasl': {
+        const auth = new DraslAuth(this, this.opts)
+        this.auth = await auth.init()
+        break
+      }
+      case 'offline': {
+        this.auth = {
+          userType: 'mojang',
+          name: this.opts.auth.username
+        }
+        break
+      }
+      default: {
+        throw 'Unknown auth type!'
+      }
+    }
+
+    // Arguments
+    this.arguments = await buildArguments(this, this.versionManifest)
     console.log(`[launch.ts] JVM Arguments: ${JSON.stringify(this.arguments.jvm)}`)
     // console.log(`[launch.ts] Classpath: -cp ${this.classpath}`)
     console.log(`[launch.ts] Main class: ${this.fabricMeta.launcherMeta.mainClass.client}`)
@@ -70,6 +93,7 @@ export class Launch {
 
   private createProcess(): ChildProcessWithoutNullStreams {
     if (this.opts.callbacks?.gameOnStart) this.opts.callbacks.gameOnStart()
+    // prettier-ignore
     return spawn(
       this.javaExePath,
       [

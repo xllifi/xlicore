@@ -1,8 +1,12 @@
 import { DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderVerify } from './utils/Downloader.js'
 
 export type LaunchOpts = {
-  auth: string // TODO: Make actual auth!
-  authserver: string // TODO: same as above
+  auth: {
+    type: 'drasl' | 'offline'
+    username: string
+    server?: string
+    password?: string
+  }
   /** Path to `.minecraft` directory */
   rootDir: string
   /** Minecraft version */

@@ -4,13 +4,13 @@ import type { MrpackMeta } from '../../types/meta/mrpack/MrpackMeta.ts'
 import type { DownloaderFile } from '../../types/utils/Downloader.js'
 import { getUrlFilename } from '../../utils/downloader.js'
 import fs from 'fs'
-import fse from 'fs-extra'
 import fsp from 'fs/promises'
 import path from 'path'
 import extract from 'extract-zip'
+import { mvDir } from '../../utils/general.js'
 
 export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<void> {
-  if (!opts.mrpack || fs.existsSync(path.resolve(launch.instancePath, 'modrinth.index.json'))) return
+  if (!opts.mrpack || (fs.existsSync(path.resolve(launch.instancePath, 'modrinth.index.json')) && !fs.existsSync(path.resolve(launch.instancePath, 'overrides')))) return
   if (!URL.canParse(opts.mrpack?.url)) throw `Invald URL: ${opts.mrpack?.url}`
 
   const file: DownloaderFile = {
@@ -22,13 +22,13 @@ export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<voi
   }
   await launch.dl.downloadSingleFile(file)
 
+  // Extract
   const dest = path.resolve(file.dir, file.name!)
-  // console.log(`[MrpackDL] Extracting ${dest} to ${path.dirname(launch.instancePath)}`)
+  console.log(`Extracting and deleting ${dest}`)
   await extract(dest, { dir: file.dir })
-
-  // console.log(`[MrpackDL] Deleting ${dest}`)
   fs.unlinkSync(dest)
-  await fse.move(path.resolve(launch.instancePath, 'overrides'), launch.instancePath, console.error)
+
+  await mvDir(path.resolve(launch.instancePath, 'overrides'), launch.instancePath)
 
   const mrpackMeta: MrpackMeta = await fsp.readFile(path.resolve(file.dir, 'modrinth.index.json'), { encoding: 'utf8' }).then((res) => JSON.parse(res))
 
