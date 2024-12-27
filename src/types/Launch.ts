@@ -6,6 +6,7 @@ export type LaunchOpts = {
     username: string
     server?: string
     password?: string
+    useAuthlib?: boolean
   }
   /** Path to `.minecraft` directory */
   rootDir: string

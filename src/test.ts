@@ -7,7 +7,8 @@ const launchOpts: LaunchOpts = {
     type: 'drasl',
     username: 'xllifi',
     password: '[REDACTED]',
-    server: '[REDACTED]'
+    server: '[REDACTED]',
+    useAuthlib: true
   },
   rootDir: path.resolve(process.cwd(), 'store'),
   version: '1.21.1',

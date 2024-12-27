@@ -16,6 +16,7 @@ import { buildArguments } from './arguments/minecraft.js'
 import { parseMrpack } from './download/modpack/parseMrpack.js'
 import { DraslAuth } from './auth/drasl.js'
 import { launchCredentials } from './types/meta/drasl/launchCredentials.js'
+import { downloadAuthlib } from './auth/authlib.js'
 
 export class Launch {
   dl: Downloader
@@ -25,11 +26,12 @@ export class Launch {
   fabricMeta: FabricLauncherMeta = {} as FabricLauncherMeta
   arguments: GameLaunchArguments = {} as GameLaunchArguments
 
-  classpath: string = ''
+  classpath: string[] = []
   javaExePath: string = ''
   assetPath: string = ''
   instancePath: string = ''
   auth: launchCredentials = {} as launchCredentials
+  authlibInjectorPath: string | null = null
 
   constructor(opts: LaunchOpts) {
     this.opts = opts
@@ -49,7 +51,7 @@ export class Launch {
     // Download
     const fabricCP = await downloadFabricLibraries(this, this.fabricMeta)
     const minecraftCP = await downloadMinecraftLibraries(this, this.versionManifest)
-    this.classpath = [...fabricCP, ...minecraftCP].join(';')
+    this.classpath = [...fabricCP, ...minecraftCP]
     this.javaExePath = await downloadJava(this, this.versionManifest)
     this.assetPath = await downloadAssets(this, this.versionManifest)
     await parseMrpack(this, this.opts)
@@ -72,6 +74,7 @@ export class Launch {
         throw 'Unknown auth type!'
       }
     }
+    if (this.opts.auth.useAuthlib) this.authlibInjectorPath = await downloadAuthlib(this)
 
     // Arguments
     this.arguments = await buildArguments(this, this.versionManifest)
@@ -98,7 +101,7 @@ export class Launch {
       this.javaExePath,
       [
         ...this.arguments.jvm,
-        `-cp`, this.classpath,
+        `-cp`, this.classpath.join(';'),
         this.fabricMeta.launcherMeta.mainClass.client,
         ...this.arguments.game
       ],

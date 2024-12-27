@@ -44,6 +44,9 @@ export function buildArguments(launch: Launch, versionManifest: VersionManifest)
     jvm.push(`-Dminecraft.api.session.host=${launch.opts.auth.server}/session`)
     jvm.push(`-Dminecraft.api.services.host=${launch.opts.auth.server}/services`)
   }
+  if (launch.authlibInjectorPath) {
+    jvm.push(`-javaagent:${launch.authlibInjectorPath}=${launch.opts.auth.server}`)
+  }
   // Custom game arguments
   if (launch.opts.gameOpts?.screen) {
     game.push(`--width ${launch.opts.gameOpts?.screen.width}`)
