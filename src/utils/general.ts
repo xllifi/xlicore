@@ -2,7 +2,6 @@ import { DownloadProgress } from 'ky'
 import type { DownloaderLastProgress } from '../types/utils/Downloader.js'
 import fsp from 'fs/promises'
 import path from 'path'
-import { rimraf } from 'rimraf'
 
 export const mojangOsMapping: { [key: string]: string } = { win32: 'windows', darwin: 'osx', linux: 'linux' }
 export const mojangArchMapping: { [key: string]: string } = { x64: 'x64', ie32: 'x86' }
@@ -58,6 +57,6 @@ export async function mvDir(srcDir: string, destDir: string): Promise<void> {
       }
     })
   ).then(async () => {
-    await rimraf(srcDir)
+    await fsp.rmdir(srcDir)
   })
 }
