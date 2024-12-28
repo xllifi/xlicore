@@ -1,3 +1,4 @@
+import { DraslAuth } from './auth/drasl.js'
 import { Launch } from './launch.js'
 import type { LaunchOpts, GameLaunchArguments } from './types/Launch.ts'
 import type { DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderFile, DownloaderLastProgress } from './types/utils/Downloader.js'
@@ -26,5 +27,6 @@ import type { DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, Download
 export {
   Launch,
   LaunchOpts, GameLaunchArguments,
-  DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderFile, DownloaderLastProgress
+  DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderFile, DownloaderLastProgress,
+  DraslAuth
 }
