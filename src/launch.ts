@@ -10,8 +10,8 @@ import { downloadJava } from './download/javaTemurin.js';
 import { downloadFabricLibraries } from './download/libraries/fabric.js';
 import { downloadMinecraftLibraries } from './download/libraries/minecraft.js';
 import { parseMrpack } from './download/modpack/parseMrpack.js';
-import { getFabricLauncherMetaForVersion } from './meta/fabric.js';
-import { getVersionManifest } from './meta/minecraft.js';
+import { getFabricLauncherMetaForVersion } from './download/meta/fabric.js';
+import { getVersionManifest } from './download/meta/minecraft.js';
 import { Downloader } from './utils/downloader.js';
 
 import type { GameLaunchArguments, LaunchOpts } from './types/Launch.ts'
