@@ -1,13 +1,9 @@
+import { launchCredentials } from './meta/auth/launchCredentials.js'
 import { DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderVerify } from './utils/Downloader.js'
 
 export type LaunchOpts = {
-  auth: {
-    type: 'drasl' | 'offline'
-    username: string
-    server?: string
-    password?: string
-    useAuthlib?: boolean
-  }
+  auth: launchCredentials
+  useAuthlib: boolean
   /** Path to `.minecraft` directory */
   rootDir: string
   /** Minecraft version */

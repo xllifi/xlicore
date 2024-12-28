@@ -37,15 +37,13 @@ export function buildArguments(launch: Launch, versionManifest: VersionManifest)
     jvm.push(`-Xms${launch.opts.gameOpts.memory.min}M`)
     jvm.push(`-Xmx${launch.opts.gameOpts.memory.max}M`)
   }
-  if (launch.opts.auth.type == 'drasl') {
+  if (launch.opts.auth.drasl) {
     jvm.push(`-Dminecraft.api.env=custom`)
-    jvm.push(`-Dminecraft.api.auth.host=${launch.opts.auth.server}/auth`)
-    jvm.push(`-Dminecraft.api.account.host=${launch.opts.auth.server}/account`)
-    jvm.push(`-Dminecraft.api.session.host=${launch.opts.auth.server}/session`)
-    jvm.push(`-Dminecraft.api.services.host=${launch.opts.auth.server}/services`)
-  }
-  if (launch.authlibInjectorPath) {
-    jvm.push(`-javaagent:${launch.authlibInjectorPath}=${launch.opts.auth.server}`)
+    jvm.push(`-Dminecraft.api.auth.host=${launch.opts.auth.drasl.server}/auth`)
+    jvm.push(`-Dminecraft.api.account.host=${launch.opts.auth.drasl.server}/account`)
+    jvm.push(`-Dminecraft.api.session.host=${launch.opts.auth.drasl.server}/session`)
+    jvm.push(`-Dminecraft.api.services.host=${launch.opts.auth.drasl.server}/services`)
+    if (launch.authlibInjectorPath) jvm.push(`-javaagent:${launch.authlibInjectorPath}=${launch.opts.auth.drasl.server}/authlib-injector`)
   }
   // Custom game arguments
   if (launch.opts.gameOpts?.screen) {
@@ -70,15 +68,15 @@ export function buildArguments(launch: Launch, versionManifest: VersionManifest)
     '${game_directory}': launch.instancePath,
     '${assets_root}': launch.assetPath,
     '${assets_index_name}': launch.versionManifest.assetIndex.id,
-    '${user_type}': launch.auth.userType,
-    '${auth_player_name}': launch.auth.name,
-    '${auth_uuid}': launch.auth.uuid || '',
-    '${auth_access_token}': launch.auth.accessToken || '',
-    '${clientid}': launch.auth.clientId || '',
+    '${user_type}': launch.opts.auth.userType,
+    '${auth_player_name}': launch.opts.auth.name,
+    '${auth_uuid}': launch.opts.auth.uuid || '',
+    '${auth_access_token}': launch.opts.auth.accessToken || '',
+    '${clientid}': launch.opts.auth.clientId || '',
 
-    '--clientId': launch.auth.clientId ? '--clientId' : '',
-    '--accessToken': launch.auth.accessToken ? '--accessToken' : '',
-    '--uuid': launch.auth.uuid ? '--uuid' : '',
+    '--clientId': launch.opts.auth.clientId ? '--clientId' : '',
+    '--accessToken': launch.opts.auth.accessToken ? '--accessToken' : '',
+    '--uuid': launch.opts.auth.uuid ? '--uuid' : '',
     '--xuid': '',
     '${auth_xuid}': ''
   }

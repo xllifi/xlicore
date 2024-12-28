@@ -1,15 +1,19 @@
 import * as path from 'node:path'
 import type { LaunchOpts } from './types/Launch.ts'
 import { Launch } from './launch.js'
+import 'dotenv/config'
+import { DraslAuth } from './auth/drasl.js'
+
+const drasl = new DraslAuth({
+  username: process.env.AUTHUSRNM!,
+  password: process.env.AUTHPW!,
+  server: process.env.AUTHSRV!,
+  saveDir: path.resolve(process.cwd(), 'store/instance')
+})
 
 const launchOpts: LaunchOpts = {
-  auth: {
-    type: 'drasl',
-    username: 'xllifi',
-    password: '[REDACTED]',
-    server: '[REDACTED]',
-    useAuthlib: true
-  },
+  auth: await drasl.init(),
+  useAuthlib: true,
   rootDir: path.resolve(process.cwd(), 'store'),
   version: '1.21.1',
   mrpack: {

@@ -1,6 +1,6 @@
 import ky from "ky";
 import { Launch } from "../launch.js";
-import { Artifact } from "../types/meta/authlib-injector/main.js";
+import { Artifact } from "../types/meta/auth/authlib-injector/main.js";
 import { DownloaderFile } from "../types/utils/Downloader.js";
 import path from "path";
 

@@ -13,4 +13,8 @@ export type launchCredentials = {
    * `mojang` for [Legacy Mojang Authentication](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Legacy_Mojang_Authentication).
    */
   userType: 'msa' | 'legacy' | 'mojang'
+  /** drasl parameters */
+  drasl?: {
+    server: string
+  }
 }

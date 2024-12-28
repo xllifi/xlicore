@@ -1,22 +1,22 @@
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
-import path from 'path'
-import { downloadJava } from './download/javaTemurin.js'
-import { downloadFabricLibraries } from './download/libraries/fabric.js'
-import { downloadMinecraftLibraries } from './download/libraries/minecraft.js'
-import { getFabricLauncherMetaForVersion } from './meta/fabric.js'
-import { getVersionManifest } from './meta/minecraft.js'
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import fs from 'fs';
+import fsp from 'fs/promises';
+import path from 'path';
+
+import { buildArguments } from './arguments/minecraft.js';
+import { downloadAuthlib } from './auth/authlib.js';
+import { downloadAssets } from './download/assets.js';
+import { downloadJava } from './download/javaTemurin.js';
+import { downloadFabricLibraries } from './download/libraries/fabric.js';
+import { downloadMinecraftLibraries } from './download/libraries/minecraft.js';
+import { parseMrpack } from './download/modpack/parseMrpack.js';
+import { getFabricLauncherMetaForVersion } from './meta/fabric.js';
+import { getVersionManifest } from './meta/minecraft.js';
+import { Downloader } from './utils/downloader.js';
+
 import type { GameLaunchArguments, LaunchOpts } from './types/Launch.ts'
 import type { FabricLauncherMeta } from './types/meta/fabric/FabricLauncherMeta.ts'
 import type { VersionManifest } from './types/meta/minecraft/VersionManifest.ts'
-import { Downloader } from './utils/downloader.js'
-import fs from 'fs'
-import fsp from 'fs/promises'
-import { downloadAssets } from './download/assets.js'
-import { buildArguments } from './arguments/minecraft.js'
-import { parseMrpack } from './download/modpack/parseMrpack.js'
-import { DraslAuth } from './auth/drasl.js'
-import { launchCredentials } from './types/meta/drasl/launchCredentials.js'
-import { downloadAuthlib } from './auth/authlib.js'
 
 export class Launch {
   dl: Downloader
@@ -30,7 +30,6 @@ export class Launch {
   javaExePath: string = ''
   assetPath: string = ''
   instancePath: string = ''
-  auth: launchCredentials = {} as launchCredentials
   authlibInjectorPath: string | null = null
 
   constructor(opts: LaunchOpts) {
@@ -57,24 +56,7 @@ export class Launch {
     await parseMrpack(this, this.opts)
 
     // Auth
-    switch (this.opts.auth.type) {
-      case 'drasl': {
-        const auth = new DraslAuth(this, this.opts)
-        this.auth = await auth.init()
-        break
-      }
-      case 'offline': {
-        this.auth = {
-          userType: 'mojang',
-          name: this.opts.auth.username
-        }
-        break
-      }
-      default: {
-        throw 'Unknown auth type!'
-      }
-    }
-    if (this.opts.auth.useAuthlib) this.authlibInjectorPath = await downloadAuthlib(this)
+    if (this.opts.useAuthlib) this.authlibInjectorPath = await downloadAuthlib(this)
 
     // Arguments
     this.arguments = await buildArguments(this, this.versionManifest)
@@ -88,7 +70,7 @@ export class Launch {
     subprocess.stdout.setEncoding('utf8')
     subprocess.stdout.on('data', (data: Buffer) => console.log('[MC LOGS] ' + data.toString().replace(/\n$/, '')))
     subprocess.stderr.setEncoding('utf8')
-    subprocess.stderr.on('data', (data) => console.error('[MC LOGS] ' + data))
+    subprocess.stderr.on('data', (data) => console.error('[MC LOGS] ' + data.toString().replace(/\n$/, '')))
 
     if (this.opts.callbacks?.gameOnExit) subprocess.on('exit', this.opts.callbacks.gameOnExit)
     if (this.opts.callbacks?.gameOnError) subprocess.on('error', this.opts.callbacks.gameOnError)
