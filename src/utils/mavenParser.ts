@@ -7,7 +7,7 @@ import type { MavenParserReturn } from '../types/utils/MavenParser.js'
  */
 export function mavenParse(mavenUrl: string, packageName: string): MavenParserReturn {
   const split: string[] = packageName.split(':')
-  if (split.length > 3) throw `Unparseable maven package name ${packageName} (more than 2 :'s)`
+  if (split.length > 3) throw new Error(`Unparseable maven package name ${packageName} (more than 2 :'s)`)
   const filename = `${split[1]}-${split[2]}.jar`
 
   if (!mavenUrl.match(/^.+:\/{2}/g)) {

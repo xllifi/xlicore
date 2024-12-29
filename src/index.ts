@@ -1,6 +1,7 @@
 import { DraslAuth } from './auth/drasl.js'
 import { Launch } from './launch.js'
 import type { LaunchOpts, GameLaunchArguments } from './types/Launch.ts'
+import { launchCredentials } from './types/meta/auth/launchCredentials.js'
 import type { DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderFile, DownloaderLastProgress } from './types/utils/Downloader.js'
 
 // const launchOpts: LaunchOpts = {
@@ -28,5 +29,5 @@ export {
   Launch,
   LaunchOpts, GameLaunchArguments,
   DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderFile, DownloaderLastProgress,
-  DraslAuth
+  DraslAuth, launchCredentials
 }

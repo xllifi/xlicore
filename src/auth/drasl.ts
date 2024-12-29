@@ -57,7 +57,7 @@ export class DraslAuth {
   }
 
   async first(): Promise<DraslAuthenticate.Response> {
-    if (!this.opts.password) throw '[Drasl Auth] Password not specified!'
+    if (!this.opts.password) throw new Error('[Drasl Auth] Password not specified!')
 
     const body: DraslAuthenticate.Request = {
       agent: {
@@ -121,11 +121,11 @@ export class DraslAuth {
 
     if (resp.status == 204) return true
     if (resp.status == 403) return false
-    throw `Unhandled status ${resp.status}: ${resp.statusText}!`
+    throw new Error(`Unhandled status ${resp.status}: ${resp.statusText}!`)
   }
 
   async signout(): Promise<void> {
-    if (!this.opts.password) throw `No password! Can't sign out.`
+    if (!this.opts.password) throw new Error(`No password! Can't sign out.`)
     const body: DraslSignout.Request = {
       username: this.opts.username,
       password: this.opts.password
@@ -138,7 +138,7 @@ export class DraslAuth {
       body: JSON.stringify(body)
     })
 
-    if (resp.status == 401) throw `Invalid credentials! Can't sign out.`
-    if (resp.status != 204) throw `Unhandled status ${resp.status}: ${resp.statusText}!`
+    if (resp.status == 401) throw new Error(`Invalid credentials! Can't sign out.`)
+    if (resp.status != 204) throw new Error(`Unhandled status ${resp.status}: ${resp.statusText}!`)
   }
 }

@@ -22,7 +22,7 @@ async function testFabricMetaUrl(testAnyway?: boolean): Promise<void> {
     fabricMeta = fabricMetaFallback
     return
   }
-  throw 'Both fabric meta servers failed!'
+  throw new Error('Both fabric meta servers failed!')
 }
 
 export async function getFabricLauncherMetaForVersion(launch: Launch, versionManifest: VersionManifest, fabricVersion?: string): Promise<FabricLauncherMeta> {

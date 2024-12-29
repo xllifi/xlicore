@@ -11,7 +11,7 @@ import { mvDir } from '../../utils/general.js'
 
 export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<void> {
   if (!opts.mrpack || (fs.existsSync(path.resolve(launch.instancePath, 'modrinth.index.json')) && !fs.existsSync(path.resolve(launch.instancePath, 'overrides')))) return
-  if (!URL.canParse(opts.mrpack?.url)) throw `Invald URL: ${opts.mrpack?.url}`
+  if (!URL.canParse(opts.mrpack?.url)) throw new Error(`Invald URL: ${opts.mrpack?.url}`)
 
   const file: DownloaderFile = {
     url: opts.mrpack?.url,

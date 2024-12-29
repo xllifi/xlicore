@@ -22,7 +22,7 @@ export class Downloader {
     file.dir = path.resolve(file.dir)
 
     // Verify variables
-    if (!URL.canParse(file.url)) throw `Invald URL: ${file.url}`
+    if (!URL.canParse(file.url)) throw new Error(`Invald URL: ${file.url}`)
     if (!file.name) file.name = getUrlFilename(file.url)
     if (!file.size) {
       const clHeader = await ky.head(file.url).then(res => res.headers.get('content-length'))
@@ -80,7 +80,7 @@ export class Downloader {
         writeStream.close()
         await sleep(250)
         await fsp.rename(dest + this.tempSuffix, dest).catch((err) => {
-          if (!fs.existsSync(dest)) throw err
+          if (!fs.existsSync(dest)) throw new Error(err)
         })
 
         if (file.verify) {
@@ -141,7 +141,7 @@ export class Downloader {
     if (currentHash != file.verify!.hash) {
       if (file.verify!.noDlRetry) {
         fs.unlinkSync(dest)
-        throw `Failed to verify file ${file.name}`
+        throw new Error(`Failed to verify file ${file.name}`)
       }
       return this.downloadSingleFile<T>({ ...file, verify: { ...file.verify!, noDlRetry: true } }, { ...opts, overwrite: true })
     }

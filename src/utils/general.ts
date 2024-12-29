@@ -57,6 +57,6 @@ export async function mvDir(srcDir: string, destDir: string): Promise<void> {
       }
     })
   ).then(async () => {
-    await fsp.rmdir(srcDir)
+    await fsp.rmdir(srcDir, { recursive: true })
   })
 }
