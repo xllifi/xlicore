@@ -60,3 +60,18 @@ export async function mvDir(srcDir: string, destDir: string): Promise<void> {
     await fsp.rmdir(srcDir, { recursive: true })
   })
 }
+
+export async function genDirs(rootDir: string): Promise<void> {
+  const dirs: string[] = [
+    path.resolve(rootDir, 'instance'),
+    path.resolve(rootDir, 'libraries'),
+    path.resolve(rootDir, 'version'),
+    path.resolve(rootDir, 'assets')
+  ]
+  await Promise.all(
+    dirs.map((x) => {
+      fsp.mkdir(x, { recursive: true })
+    })
+  )
+  return
+}
