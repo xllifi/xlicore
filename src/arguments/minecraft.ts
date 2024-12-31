@@ -47,8 +47,10 @@ export function buildArguments(launch: Launch, versionManifest: VersionManifest)
   }
   // Custom game arguments
   if (launch.opts.gameOpts?.screen) {
-    game.push(`--width ${launch.opts.gameOpts?.screen.width}`)
-    game.push(`--height ${launch.opts.gameOpts?.screen.height}`)
+    game.push(`--width`)
+    game.push(''+launch.opts.gameOpts.screen.width)
+    game.push(`--height`)
+    game.push(''+launch.opts.gameOpts.screen.height)
   }
 
   // Argument maps
