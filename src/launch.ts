@@ -87,7 +87,7 @@ export class Launch {
         this.fabricMeta.launcherMeta.mainClass.client,
         ...this.arguments.game
       ],
-      { cwd: this.instancePath }
+      { cwd: this.instancePath, detached: !this.opts.gameOpts?.detached }
     )
   }
 }

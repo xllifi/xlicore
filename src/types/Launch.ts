@@ -41,6 +41,8 @@ export type LaunchOpts = {
       /** Max RAM */
       max: number
     }
+    /** Should the game be detached from launcher */
+    detached?: boolean
   }
   /** Launcher data. Optional */
   launcher?: {
