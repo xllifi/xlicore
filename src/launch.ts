@@ -73,6 +73,8 @@ export class Launch {
     subprocess.stderr.on('data', (data) => console.error('[MC LOGS] ' + data.toString().replace(/\n$/, '')))
 
     if (this.opts.callbacks?.gameOnExit) subprocess.on('exit', this.opts.callbacks.gameOnExit)
+    if (this.opts.callbacks?.gameOnLogs) subprocess.stdout.on('data', (data: Buffer) => {this.opts.callbacks!.gameOnLogs!(data.toString().replace(/\n$/, ''))})
+    if (this.opts.callbacks?.gameOnLogs) subprocess.stderr.on('data', (data: Buffer) => {this.opts.callbacks!.gameOnLogs!(data.toString().replace(/\n$/, ''))})
     if (this.opts.callbacks?.gameOnError) subprocess.on('error', this.opts.callbacks.gameOnError)
   }
 

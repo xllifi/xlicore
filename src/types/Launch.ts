@@ -14,15 +14,11 @@ export type LaunchOpts = {
   }
   /** Downloader settings */
   callbacks?: {
-    /** Progress callback. Use to track download progresses */
     dlOnProgress?: DownloaderCallbackOnProgress
-    /** Finish callback. Use to track download finishes */
     dlOnFinish?: DownloaderCallbackOnFinish
-    /** Game start callback */
     gameOnStart?: () => void
-    /** Game exit callback */
     gameOnExit?: () => void
-    /** Game error callback */
+    gameOnLogs?: (data: string) => void
     gameOnError?: (err: Error) => void
   }
   /** Minecraft options */
