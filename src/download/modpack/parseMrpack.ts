@@ -10,7 +10,12 @@ import extract from 'extract-zip'
 import { mvDir } from '../../utils/general.js'
 
 export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<void> {
-  if (!opts.mrpack || (fs.existsSync(path.resolve(launch.instancePath, 'modrinth.index.json')) && !fs.existsSync(path.resolve(launch.instancePath, 'overrides')))) return
+  if (!opts.mrpack) return
+
+  let oldmeta: null | MrpackMeta = null
+  if (fs.existsSync(path.resolve(launch.instancePath, 'modrinth.index.json')) && !fs.existsSync(path.resolve(launch.instancePath, 'overrides'))) {
+    oldmeta = await fsp.readFile(path.resolve(launch.instancePath, 'modrinth.index.json'), { encoding: 'utf8' }).then((res) => JSON.parse(res))
+  }
   if (!URL.canParse(opts.mrpack?.url)) throw new Error(`Invald URL: ${opts.mrpack?.url}`)
 
   const file: DownloaderFile = {
@@ -31,6 +36,19 @@ export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<voi
   await mvDir(path.resolve(launch.instancePath, 'overrides'), launch.instancePath)
 
   const mrpackMeta: MrpackMeta = await fsp.readFile(path.resolve(file.dir, 'modrinth.index.json'), { encoding: 'utf8' }).then((res) => JSON.parse(res))
+  // Remove old files
+  if (oldmeta) {
+    if (mrpackMeta.name === oldmeta.name && mrpackMeta.versionId === oldmeta.versionId) return
+
+    await Promise.all(
+      oldmeta.files.map(
+        x => {
+          console.log(`Removing file ${x.path}`)
+          fsp.unlink(path.resolve(launch.instancePath, x.path))
+        }
+      )
+    )
+  }
 
   const dlFiles: DownloaderFile[] = []
   for (const file of mrpackMeta.files) {

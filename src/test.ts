@@ -3,6 +3,11 @@ import type { LaunchOpts } from './types/Launch.ts'
 import { Launch } from './launch.js'
 import 'dotenv/config'
 import { DraslAuth } from './auth/drasl.js'
+import fs from 'fs'
+
+if (!fs.existsSync(path.resolve(process.cwd(), 'store/instance'))) {
+  fs.mkdirSync(path.resolve(process.cwd(), 'store/instance'), { recursive: true })
+}
 
 const drasl = new DraslAuth({
   username: process.env.AUTHUSRNM!,
@@ -17,9 +22,9 @@ const launchOpts: LaunchOpts = {
   rootDir: path.resolve(process.cwd(), 'store'),
   version: '1.21.1',
   mrpack: {
-    url: 'https://cdn.modrinth.com/data/1KVo5zza/versions/NyiXTqoa/Fabulously.Optimized-v6.2.3-mr.1.mrpack',
+    url: 'https://cdn.modrinth.com/data/BYfVnHa7/versions/wODzvDvO/Simply%20Optimized-1.21.1-4.3.mrpack',
     verify: {
-      hash: '6bcdaedaed389e4c37bd22c10276126a47806aba',
+      hash: 'c39a70c80ae697de8d95e8c5d20dcd591250f98c',
       algorithm: 'sha1'
     }
   }
