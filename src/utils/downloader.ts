@@ -25,7 +25,7 @@ export class Downloader {
     if (!URL.canParse(file.url)) throw new Error(`Invald URL: ${file.url}`)
     if (!file.name) file.name = getUrlFilename(file.url)
     if (!file.size) {
-      const clHeader = await ky.head(file.url).then(res => res.headers.get('content-length'))
+      const clHeader = await ky.head(file.url).then(res => res.headers.get('content-length')).catch(() => '0')
       if (clHeader) file.size = parseInt(clHeader)
     }
     if (!opts.onDownloadProgress)
