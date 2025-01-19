@@ -7,17 +7,38 @@ import fs from 'fs'
 import fsp from 'fs/promises'
 import path from 'path'
 import extract from 'extract-zip'
-import { mvDir } from '../../utils/general.js'
+import { mvDir, splitArray } from '../../utils/general.js'
+import { createHash } from 'crypto'
 
 async function deleteByOldMeta(launch: Launch, oldmeta: MrpackMeta) {
-  return Promise.all(
-    oldmeta.files.map(
-      x => {
-        console.log(`Removing file ${x.path}`)
-        fsp.unlink(path.resolve(launch.instancePath, x.path))
-      }
-    )
-  )
+  const overridesMeta: cachedFile[] | null = await fsp
+    .readFile(path.resolve(launch.instancePath, 'overrides.json'), { encoding: 'utf8' })
+    .then((res) => JSON.parse(res))
+    .catch(() => null)
+
+  let filteredOverridesMeta: cachedFile[] = []
+
+  if (overridesMeta) {
+    filteredOverridesMeta = overridesMeta.filter(async (file) => {
+      const content = await fsp.readFile(file.path, { encoding: 'utf8' })
+      const hashMaker = createHash('sha1')
+      hashMaker.update(content)
+      const sha1 = hashMaker.digest('hex')
+      return sha1 !== file.sha1
+    })
+  }
+
+  const mods: cachedFile[] = oldmeta.files.map((file) => ({ path: path.resolve(launch.instancePath, file.path), sha1: file.hashes.sha1 }))
+
+  const files = [...mods, ...filteredOverridesMeta]
+
+  const chunks = files.length > 64 ? splitArray(files.length / 64, files) : [files]
+  for (const chunk of chunks) {
+    await Promise.all(chunk.map(file => {
+      console.log(`Removing file ${file.path}`)
+      fsp.unlink(file.path)
+    }))
+  }
 }
 
 export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<void> {
@@ -49,14 +70,27 @@ export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<voi
   await extract(dest, { dir: file.dir })
   fs.unlinkSync(dest)
 
-  await mvDir(path.resolve(launch.instancePath, 'overrides'), launch.instancePath)
-
   const mrpackMeta: MrpackMeta = await fsp.readFile(path.resolve(file.dir, 'modrinth.index.json'), { encoding: 'utf8' }).then((res) => JSON.parse(res))
+
   // Remove old files
   if (oldmeta) {
     if (mrpackMeta.name === oldmeta.name && mrpackMeta.versionId === oldmeta.versionId) return
     await deleteByOldMeta(launch, oldmeta)
   }
+
+  // Cache new files
+  const cachedFiles: cachedFile[] = []
+  await mvDir(path.resolve(launch.instancePath, 'overrides'), launch.instancePath, {
+    fileAfterCopy(path) {
+      const hashMaker = createHash('sha1')
+      hashMaker.update(fs.readFileSync(path, { encoding: 'utf8' }))
+      const sha1 = hashMaker.digest('hex')
+      const file: cachedFile = { path, sha1 }
+      cachedFiles.push(file)
+    }
+  })
+  console.log(cachedFiles)
+  await fsp.writeFile(path.resolve(launch.instancePath, 'overrides.json'), JSON.stringify(cachedFiles))
 
   const dlFiles: DownloaderFile[] = []
   for (const file of mrpackMeta.files) {
@@ -80,4 +114,9 @@ export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<voi
       .map((x) => x.fileSize)
       .reduce((pV, x) => (pV += x))
   })
+}
+
+type cachedFile = {
+  path: string
+  sha1: string
 }

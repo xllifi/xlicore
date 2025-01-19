@@ -43,17 +43,24 @@ export function splitArray<T>(amount: number, array: T[]): T[][] {
 export function getUniqueArrayBy<T extends Record<string, unknown>>(arr: Array<T>, key: string): Array<T> {
   return [...new Map(arr.map((item) => [item[key], item])).values()]
 }
-
-export async function mvDir(srcDir: string, destDir: string): Promise<void> {
+type mvDirOpts = {
+  fileBeforeCopy?: (srcFilepath: string) => void,
+  fileAfterCopy?: (destFilepath: string) => void,
+}
+export async function mvDir(srcDir: string, destDir: string, opts?: mvDirOpts): Promise<void> {
   const filenames: string[] = (await fsp.readdir(srcDir, { recursive: true })).reverse()
-  console.log(`Moving files: ${filenames}`)
+  // console.log(`Moving files: ${filenames}`)
   await Promise.all(
-    filenames.map(async (x) => {
+    filenames.map(async (filename) => {
       // console.log(`Moving file: ${x}`)
-      const stat = await fsp.stat(path.resolve(srcDir, x))
+      const srcFilepath: string = path.resolve(srcDir, filename)
+      const destFilepath: string = path.resolve(destDir, filename)
+      const stat = await fsp.stat(srcFilepath)
       if (stat.isFile()) {
-        await fsp.cp(path.resolve(srcDir, x), path.resolve(destDir, x), { recursive: true })
-        await fsp.unlink(path.resolve(srcDir, x))
+        if (opts && opts.fileBeforeCopy) opts.fileBeforeCopy(srcFilepath)
+        await fsp.cp(srcFilepath, destFilepath, { recursive: true })
+        await fsp.unlink(srcFilepath)
+        if (opts && opts.fileAfterCopy) opts.fileAfterCopy(destFilepath)
       }
     })
   ).then(async () => {

@@ -23,10 +23,7 @@ const launchOpts: LaunchOpts = {
   version: '1.21.1',
   mrpack: {
     url: 'https://cdn.modrinth.com/data/BYfVnHa7/versions/wODzvDvO/Simply%20Optimized-1.21.1-4.3.mrpack',
-    verify: {
-      hash: 'c39a70c80ae697de8d95e8c5d20dcd591250f98c',
-      algorithm: 'sha1'
-    }
+    // url: 'https://cdn.modrinth.com/data/5FFgwNNP/versions/Jln0oj6n/Cobblemon%20Modpack%20%5BFabric%5D%201.6.mrpack',
   }
 }
 export const launch = new Launch(launchOpts)
