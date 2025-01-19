@@ -6,7 +6,16 @@
   "author": "xllifi",
   "license": "GPL-3.0-only",
   "type": "module",
-  "private": true,
+  "description": "",
+  "keywords": ["minecraft-launcher", "minecraft", "drasl-auth", "mrpack"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xllifi/xlicore.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xllifi/xlicore/issues"
+  },
+  "homepage": "https://github.com/xllifi/xlicore",
   "exports": {
     ".": {
       "default": "./dist/index.js",
