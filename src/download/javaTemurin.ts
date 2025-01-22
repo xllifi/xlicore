@@ -40,7 +40,7 @@ export async function downloadJava(launch: Launch, versionManifest: VersionManif
   await extract(dest, { dir: path.dirname(file.dir) })
 
   // console.log(`[Java DL] Deleting ${dest}`)
-  fs.unlinkSync(dest)
+  fs.rmSync(dest)
 
   return javaExePath
 }

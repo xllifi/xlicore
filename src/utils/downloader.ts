@@ -140,7 +140,7 @@ export class Downloader {
     const currentHash: string = await this.getHash(dest, file.verify!.algorithm)
     if (currentHash != file.verify!.hash) {
       if (file.verify!.noDlRetry) {
-        fs.unlinkSync(dest)
+        fs.rmSync(dest)
         throw new Error(`Failed to verify file ${file.name}`)
       }
       return this.downloadSingleFile<T>({ ...file, verify: { ...file.verify!, noDlRetry: true } }, { ...opts, overwrite: true })

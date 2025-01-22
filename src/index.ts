@@ -1,4 +1,5 @@
 import { DraslAuth } from './auth/drasl.js'
+import { MrpackParseError } from './download/modpack/parseMrpack.js'
 import { Launch } from './launch.js'
 import type { LaunchOpts, GameLaunchArguments } from './types/Launch.ts'
 import { launchCredentials } from './types/meta/auth/launchCredentials.js'
@@ -31,5 +32,6 @@ export {
   LaunchOpts, GameLaunchArguments,
   DownloaderCallbackOnFinish, DownloaderCallbackOnProgress, DownloaderFile, DownloaderLastProgress,
   DraslAuth, launchCredentials,
+  MrpackParseError,
   genDirs,
 }

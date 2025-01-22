@@ -32,24 +32,44 @@ async function deleteByOldMeta(launch: Launch, oldmeta: MrpackMeta) {
 
   const files = [...mods, ...filteredOverridesMeta]
 
+  // Try doing first file to see if its busy
+  const isBusyResult: void | Error = await fsp.rm(files[0].path).catch((err) => {
+    if (err instanceof Error && (err.name === 'EBUSY' || err.message.includes('EBUSY'))) {
+      console.log(err.name)
+      console.log(err.message)
+      return new MrpackParseError('files_locked')
+    }
+  })
+  if (isBusyResult) throw isBusyResult
+    else files.splice(0, 1)
+
+  const errors: Error[] = []
+
   const chunks = files.length > 64 ? splitArray(files.length / 64, files) : [files]
   for (const chunk of chunks) {
     await Promise.all(chunk.map(file => {
       console.log(`Removing file ${file.path}`)
-      fsp.unlink(file.path)
-    }))
+      fsp.rm(file.path)
+    })).catch((err) => {
+      if (err instanceof Error && err.name === 'EBUSY') {
+        errors.push(new MrpackParseError('files_locked'))
+        return
+      }
+      errors.push(err)
+    })
   }
 }
 
 export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<void> {
   let oldmeta: null | MrpackMeta = null
-  if (fs.existsSync(path.resolve(launch.instancePath, 'modrinth.index.json')) && !fs.existsSync(path.resolve(launch.instancePath, 'overrides'))) {
+  if (fs.existsSync(path.resolve(launch.instancePath, 'modrinth.index.json'))) {
     oldmeta = await fsp.readFile(path.resolve(launch.instancePath, 'modrinth.index.json'), { encoding: 'utf8' }).then((res) => JSON.parse(res))
+    await fsp.rename(path.resolve(launch.instancePath, 'modrinth.index.json'), path.resolve(launch.instancePath, 'modrinth.index.json.old'))
   }
 
   if (!opts.mrpack) {
     if (oldmeta) await deleteByOldMeta(launch, oldmeta)
-    fsp.unlink(path.resolve(launch.instancePath, 'modrinth.index.json'))
+    fsp.rm(path.resolve(launch.instancePath, 'modrinth.index.json'))
     return
   }
 
@@ -68,14 +88,20 @@ export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<voi
   const dest = path.resolve(file.dir, file.name!)
   console.log(`Extracting and deleting ${dest}`)
   await extract(dest, { dir: file.dir })
-  fs.unlinkSync(dest)
+  fs.rmSync(dest)
 
   const mrpackMeta: MrpackMeta = await fsp.readFile(path.resolve(file.dir, 'modrinth.index.json'), { encoding: 'utf8' }).then((res) => JSON.parse(res))
 
   // Remove old files
   if (oldmeta) {
     if (mrpackMeta.name === oldmeta.name && mrpackMeta.versionId === oldmeta.versionId) return
-    await deleteByOldMeta(launch, oldmeta)
+    await deleteByOldMeta(launch, oldmeta).catch(async (err) => {
+      console.log(`ERROR WHILE DELETING OLDMETA`)
+      await fsp.rm(path.resolve(launch.instancePath, 'overrides'), { recursive: true })
+      await fsp.rm(path.resolve(launch.instancePath, 'modrinth.index.json'))
+      await fsp.rename(path.resolve(launch.instancePath, 'modrinth.index.json.old'), path.resolve(launch.instancePath, 'modrinth.index.json'))
+      throw err
+    })
   }
 
   // Cache new files
@@ -120,3 +146,14 @@ type cachedFile = {
   path: string
   sha1: string
 }
+
+export class MrpackParseError extends Error {
+  reason: MrpackParseErrorReason
+
+  constructor(reason: MrpackParseErrorReason) {
+    super('Something went wrong while installing .mrpack archive')
+    this.reason = reason
+  }
+}
+
+type MrpackParseErrorReason = 'files_locked'

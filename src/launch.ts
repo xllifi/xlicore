@@ -40,7 +40,10 @@ export class Launch {
     })
   }
 
-  async start(): Promise<void> {
+  /**
+   * returns subprocess
+   */
+  async start(): Promise<ChildProcessWithoutNullStreams> {
     this.instancePath = path.resolve(this.opts.rootDir, 'instance')
     if (!fs.existsSync(this.instancePath)) await fsp.mkdir(this.instancePath, { recursive: true })
 
@@ -68,20 +71,20 @@ export class Launch {
     const subprocess: ChildProcessWithoutNullStreams = this.createProcess()
 
     subprocess.stdout.setEncoding('utf8')
-    subprocess.stdout.on('data', (data: Buffer) => console.log('[MC LOGS] ' + data.toString().replace(/\n$/, '')))
+    // subprocess.stdout.on('data', (data: Buffer) => console.log('[MC LOGS] ' + data.toString().replace(/\n$/, '')))
     subprocess.stderr.setEncoding('utf8')
-    subprocess.stderr.on('data', (data) => console.error('[MC LOGS] ' + data.toString().replace(/\n$/, '')))
+    // subprocess.stderr.on('data', (data) => console.error('[MC LOGS] ' + data.toString().replace(/\n$/, '')))
 
-    if (this.opts.callbacks?.gameOnExit) subprocess.on('exit', this.opts.callbacks.gameOnExit)
+    if (this.opts.callbacks?.gameOnExit) subprocess.on('exit', () => { this.opts.callbacks!.gameOnExit!(subprocess.pid || null) })
     if (this.opts.callbacks?.gameOnLogs) subprocess.stdout.on('data', (data: Buffer) => {this.opts.callbacks!.gameOnLogs!(data.toString().replace(/\n$/, ''))})
     if (this.opts.callbacks?.gameOnLogs) subprocess.stderr.on('data', (data: Buffer) => {this.opts.callbacks!.gameOnLogs!(data.toString().replace(/\n$/, ''))})
     if (this.opts.callbacks?.gameOnError) subprocess.on('error', this.opts.callbacks.gameOnError)
+
+    return subprocess
   }
 
   private createProcess(): ChildProcessWithoutNullStreams {
-    if (this.opts.callbacks?.gameOnStart) this.opts.callbacks.gameOnStart()
-    // prettier-ignore
-    return spawn(
+    const mcprocess = spawn(
       this.javaExePath,
       [
         ...this.arguments.jvm,
@@ -91,5 +94,7 @@ export class Launch {
       ],
       { cwd: this.instancePath, detached: this.opts.gameOpts?.detached }
     )
+    if (this.opts.callbacks?.gameOnStart) this.opts.callbacks.gameOnStart(mcprocess.pid || null)
+    return mcprocess
   }
 }

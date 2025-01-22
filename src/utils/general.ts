@@ -59,7 +59,7 @@ export async function mvDir(srcDir: string, destDir: string, opts?: mvDirOpts): 
       if (stat.isFile()) {
         if (opts && opts.fileBeforeCopy) opts.fileBeforeCopy(srcFilepath)
         await fsp.cp(srcFilepath, destFilepath, { recursive: true })
-        await fsp.unlink(srcFilepath)
+        await fsp.rm(srcFilepath)
         if (opts && opts.fileAfterCopy) opts.fileAfterCopy(destFilepath)
       }
     })

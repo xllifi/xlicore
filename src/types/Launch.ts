@@ -16,8 +16,8 @@ export type LaunchOpts = {
   callbacks?: {
     dlOnProgress?: DownloaderCallbackOnProgress
     dlOnFinish?: DownloaderCallbackOnFinish
-    gameOnStart?: () => void
-    gameOnExit?: () => void
+    gameOnStart?: (pid: number | null) => void
+    gameOnExit?: (pid: number | null) => void
     gameOnLogs?: (data: string) => void
     gameOnError?: (err: Error) => void
   }
