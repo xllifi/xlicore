@@ -127,7 +127,7 @@ export class Downloader {
           if (file.size && file.size > 0) totalDownloadedBytes += file.size! - lastProgress.bytes
           calcPercent()
 
-          if (userFinishCb) userFinishCb(file, lastProgress)
+          if (userFinishCb) userFinishCb(file, lastProgress, totalPercent)
             else console.log(
               `[MULDL] Total download: ${(totalPercent * 100).toFixed(2)}% (${totalDownloadedBytes}/${totalSize})` +
                 (file.type ? ` (${file.type})` : '') +

@@ -10,7 +10,7 @@ export type DownloaderFile = {
 }
 
 export type DownloaderCallbackOnProgress = (progress: DownloadProgress, chunk: Uint8Array, file: DownloaderFile, lastProgress: DownloaderLastProgress) => void
-export type DownloaderCallbackOnFinish = (file: DownloaderFile, lastProgress: DownloaderLastProgress) => void
+export type DownloaderCallbackOnFinish = (file: DownloaderFile, lastProgress: DownloaderLastProgress, totalPercent?: number) => void
 
 export type DownloaderOpts = {
   onDownloadProgress?: DownloaderCallbackOnProgress
