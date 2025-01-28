@@ -1,6 +1,6 @@
 {
   "name": "xlicore",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "xllifi",
@@ -51,6 +51,6 @@
   "scripts": {
     "dev": "tsx src/test.ts",
     "build": "rimraf dist store && tsc",
-    "pubnpm": "yarn build && npm publish --access public"
+    "pubnpm": "yarn build && yarn publish"
   }
 }
