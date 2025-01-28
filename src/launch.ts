@@ -34,10 +34,12 @@ export class Launch {
 
   constructor(opts: LaunchOpts) {
     this.opts = opts
-    this.dl = new Downloader(undefined, {
-      onDownloadProgress: opts.callbacks?.dlOnProgress,
-      onDownloadFinish: opts.callbacks?.dlOnFinish
-    })
+
+    const callbacks = opts.callbacks ? {
+      onDownloadProgress: opts.callbacks.dlOnProgress,
+      onDownloadFinish: opts.callbacks.dlOnFinish
+    } : undefined
+    this.dl = new Downloader(undefined, callbacks)
   }
 
   /**

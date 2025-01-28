@@ -33,16 +33,17 @@ export async function downloadMinecraftLibraries(launch: Launch, versionManifest
     url: versionManifest.downloads.client.url,
     dir: path.resolve(launch.opts.rootDir, 'version', versionManifest.id),
     name: `${versionManifest.id}.jar`,
-    type: 'libraries',
+    type: 'game',
+    size: versionManifest.downloads.client.size,
     verify: {
       hash: versionManifest.downloads.client.sha1,
       algorithm: 'sha1'
     }
   }
-  files.push(clientJarFile)
   cp.push(path.resolve(clientJarFile.dir, clientJarFile.name!))
   await launch.dl.downloadMultipleFiles(files, {
-    totalSize: versionManifest.libraries.map((x) => x.downloads.artifact.size).reduce((partialSum, x) => partialSum + x, 0) + versionManifest.downloads.client.size
+    totalSize: versionManifest.libraries.map((x) => x.downloads.artifact.size).reduce((partialSum, x) => partialSum + x, 0)
   })
+  await launch.dl.downloadSingleFile(clientJarFile)
   return cp
 }

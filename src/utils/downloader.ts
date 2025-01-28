@@ -6,7 +6,7 @@ import path from 'path'
 import { Readable } from 'stream'
 import { ReadableStream } from 'stream/web'
 import crypto from 'crypto'
-import { sleep, splitArray } from './general.js'
+import { splitArray } from './general.js'
 
 export class Downloader {
   tempSuffix: string
@@ -49,7 +49,6 @@ export class Downloader {
     const resp = await ky(file.url, {
       method: 'get',
       onDownloadProgress: (progress, chunk) => {
-        if (lastProgress.timestamp + 250 > Date.now()) return
         if (file.size) {
           progress.totalBytes = file.size
           progress.percent = progress.transferredBytes / progress.totalBytes
@@ -75,25 +74,88 @@ export class Downloader {
       }
 
       // Main listeners
-      readableStream.on('end', async () => {
-        opts.onDownloadFinish!(file)
+      readableStream.on('end', () => {
         writeStream.close()
-        await sleep(250)
-        await fsp.rename(dest + this.tempSuffix, dest).catch((err) => {
-          if (!fs.existsSync(dest)) throw new Error(err)
+        writeStream.on('finish', async () => {
+          await fsp.rename(dest + this.tempSuffix, dest).catch((err) => {
+            if (!fs.existsSync(dest)) throw err
+            console.error(err)
+          })
+
+          if (file.verify) {
+            resolve(this.verifyFile(file, lastProgress, opts))
+          } else {
+            opts.onDownloadFinish!(file, lastProgress)
+          }
+          resolve(null)
         })
-
-        if (file.verify) {
-          resolve(this.verifyFile(file, opts))
-        }
-
-        resolve(null)
       })
       readableStream.on('error', (err) => reject(err))
     })
   }
 
   async downloadMultipleFiles(files: dlt.DownloaderFile[], opts: dlt.DownloaderOpts = {}): Promise<void> {
+    opts = { ...this.generalOpts, ...opts}
+
+    if (opts.totalSize) {
+      console.log(`Has totalSize, doing progress calculations`)
+
+      const userProgressCb = opts.onDownloadProgress
+      const userFinishCb = opts.onDownloadFinish
+      const totalSize: number = opts.totalSize
+
+      let totalDownloadedBytes: number = 0
+      let totalPercent: number = totalDownloadedBytes / opts.totalSize
+      function calcPercent() {
+        totalPercent = totalDownloadedBytes / totalSize
+      }
+
+      opts = {
+        ...opts,
+        onDownloadProgress(progress, chunk, file, lastProgress) {
+          totalDownloadedBytes += progress.transferredBytes - lastProgress.bytes
+          calcPercent()
+
+          if (userProgressCb) userProgressCb({ ...progress, percent: totalPercent }, chunk, file, lastProgress)
+            else console.log(
+              `[MULDL] Total download: ${(totalPercent * 100).toFixed(2)}% (${totalDownloadedBytes}/${totalSize})` +
+                (file.type ? ` (${file.type})` : '') +
+                ` | Currently downloading ${file.name}`
+            )
+        },
+        onDownloadFinish(file, lastProgress) {
+          if (file.size && file.size > 0) totalDownloadedBytes += file.size! - lastProgress.bytes
+          calcPercent()
+
+          if (userFinishCb) userFinishCb(file, lastProgress)
+            else console.log(
+              `[MULDL] Total download: ${(totalPercent * 100).toFixed(2)}% (${totalDownloadedBytes}/${totalSize})` +
+                (file.type ? ` (${file.type})` : '') +
+                ` | Finished downloading ${file.name}`
+            )
+        }
+      }
+    }
+
+    const errs: Error[] = []
+    const chunks = files.length > 64 ? splitArray(files.length / 64, files) : [files]
+
+    for (const chunk of chunks) {
+      // prettier-ignore
+      await Promise.all(
+        chunk.map(
+          (file) => this.downloadSingleFile(file, opts).catch((err) => errs.push(err))
+        )
+      )
+    }
+
+    if (errs.length > 0) {
+      console.log(`[MULDL] ` + JSON.stringify(errs))
+      throw new AggregateError(errs)
+    }
+  }
+
+  async downloadMultipleFilesOld(files: dlt.DownloaderFile[], opts: dlt.DownloaderOpts = {}): Promise<void> {
     opts = { ...this.generalOpts, ...opts }
 
     if (opts.totalSize) {
@@ -135,7 +197,7 @@ export class Downloader {
     }
   }
 
-  async verifyFile<T>(file: dlt.DownloaderFile, opts: dlt.DownloaderOpts): Promise<T | null> {
+  async verifyFile<T>(file: dlt.DownloaderFile, lastProgress: dlt.DownloaderLastProgress, opts: dlt.DownloaderOpts): Promise<T | null> {
     const dest: string = path.resolve(file.dir, file.name!)
     const currentHash: string = await this.getHash(dest, file.verify!.algorithm)
     if (currentHash != file.verify!.hash) {
@@ -145,7 +207,7 @@ export class Downloader {
       }
       return this.downloadSingleFile<T>({ ...file, verify: { ...file.verify!, noDlRetry: true } }, { ...opts, overwrite: true })
     }
-    opts.onDownloadFinish!(file)
+    opts.onDownloadFinish!(file, lastProgress)
     return null
   }
 

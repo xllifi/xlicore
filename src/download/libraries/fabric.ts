@@ -56,7 +56,7 @@ export async function downloadFabricLibraries(launch: Launch, fabricLauncherMeta
       url: resolved.url,
       dir: path.resolve(launch.opts.rootDir, 'libraries', resolved.filedir),
       name: resolved.filename,
-      type: 'libraries',
+      type: 'loader',
       verify: {
         hash: lib.sha1,
         algorithm: 'sha1'

@@ -25,27 +25,32 @@ export async function downloadAssets(launch: Launch, versionManifest: VersionMan
 
   // If there's assetIndex downloaded there's a good chance all other assets are as well. This checks if they are downloaded.
   if (fs.existsSync(path.resolve(file.dir, file.name!))) {
-    const objectDirs: string[] = await fsp.readdir(path.resolve(assetRoot, 'objects'))
-    const files: string[] = (await Promise.all(objectDirs.map(x => fsp.readdir(path.resolve(assetRoot, 'objects', x))))).flat().sort()
-    const assetsHashes: string[] = assets.map(x => x.hash).sort()
-    if (files.filter(x => !assetsHashes.includes(x)).length <= 0) return assetRoot
+    try {
+      const objectDirs: string[] = await fsp.readdir(path.resolve(assetRoot, 'objects'))
+      const files: string[] = (await Promise.all(objectDirs.map((x) => fsp.readdir(path.resolve(assetRoot, 'objects', x))))).flat().sort()
+      const assetsHashes: string[] = assets.map((x) => x.hash).sort()
+      if (files.filter((x) => !assetsHashes.includes(x)).length <= 0) return assetRoot
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.name === 'ENOENT') {
+          console.log(`That's enoent!!`)
+        }
+      }
+      console.error(err)
+    }
   }
 
-  const files: DownloaderFile[] = []
-  for (const asset of assets) {
-    console.log(`Populating asset filelist`)
-    const file: DownloaderFile = {
-      url: `https://resources.download.minecraft.net/${asset.hash.substring(0, 2)}/${asset.hash}`,
-      dir: path.resolve(assetRoot, 'objects', asset.hash.substring(0, 2)),
-      name: `${asset.hash}`,
-      type: 'assets',
-      verify: {
-        hash: asset.hash,
-        algorithm: 'sha1'
-      }
+  const files: DownloaderFile[] = assets.map((asset) => ({
+    url: `https://resources.download.minecraft.net/${asset.hash.substring(0, 2)}/${asset.hash}`,
+    dir: path.resolve(assetRoot, 'objects', asset.hash.substring(0, 2)),
+    name: `${asset.hash}`,
+    type: 'assets',
+    verify: {
+      hash: asset.hash,
+      algorithm: 'sha1'
     }
-    files.push(file)
-  }
+  }))
+
   console.log(`Submitting asset filelist`)
   await launch.dl.downloadMultipleFiles(files, {
     totalSize: Object.values(assetIndex.objects)
