@@ -12,12 +12,12 @@ let fabricMeta: URL
 
 async function testFabricMetaUrl(testAnyway?: boolean): Promise<void> {
   if (fabricMeta && !testAnyway) return
-  const respMain = await ky.head(fabricMetaMain)
+  const respMain = await ky.head(fabricMetaMain).catch(() => ({ok: false}))
   if (respMain.ok) {
     fabricMeta = fabricMetaMain
     return
   }
-  const respFallback = await ky.head(fabricMetaFallback)
+  const respFallback = await ky.head(fabricMetaFallback).catch(() => ({ok: false}))
   if (respFallback.ok) {
     fabricMeta = fabricMetaFallback
     return
