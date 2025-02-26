@@ -1,6 +1,7 @@
 import ky from 'ky'
 import * as DraslAuthenticate from '../types/meta/auth/drasl/authenticate.js'
 import * as DraslValidate from '../types/meta/auth/drasl/validate.js'
+import * as DraslInvalidate from '../types/meta/auth/drasl/invalidate.js'
 import * as DraslSignout from '../types/meta/auth/drasl/signout.js'
 import * as DraslRefresh from '../types/meta/auth/drasl/refresh.js'
 import path from 'path'
@@ -10,12 +11,15 @@ import fswin from 'fswin'
 import { launchCredentials } from '../types/meta/auth/launchCredentials.js'
 
 export type DraslOpts = {
-  username: string
-  password: string
   /** Drasl server root. Example: `https://drasl.unmojang.org` */
   server: string
   /** `.super_secret.json` file's directory */
   saveDir?: string
+}
+
+type LoginCredentials = {
+  username: string
+  password: string
 }
 
 export class DraslAuth {
@@ -29,7 +33,7 @@ export class DraslAuth {
     if (opts.saveDir) this.authFilepath = path.resolve(opts.saveDir, '.super_secret.json')
   }
 
-  async init(): Promise<launchCredentials> {
+  async init(creds: LoginCredentials): Promise<launchCredentials> {
     let json: DraslAuthenticate.Response
 
     if (this.authFilepath && fs.existsSync(this.authFilepath)) {
@@ -41,7 +45,7 @@ export class DraslAuth {
         return json
       })
     } else {
-      json = await this.first()
+      json = await this.first(creds)
     }
 
     return {
@@ -56,22 +60,22 @@ export class DraslAuth {
     }
   }
 
-  async first(): Promise<DraslAuthenticate.Response> {
-    if (!this.opts.password) throw new Error('[Drasl Auth] Password not specified!')
+  async first(creds: LoginCredentials): Promise<DraslAuthenticate.Response> {
+    if (!creds.password) throw new Error('[Drasl Auth] Password not specified!')
 
     const body: DraslAuthenticate.Request = {
       agent: {
         name: 'Minecraft',
         version: 1
       },
-      username: this.opts.username,
-      password: this.opts.password,
+      username: creds.username,
+      password: creds.password,
       requestUser: true
     }
 
     const resp: DraslAuthenticate.Response = await ky
       .post<DraslAuthenticate.Response>(this.authserver + '/authenticate', {
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
       .json()
@@ -80,23 +84,23 @@ export class DraslAuth {
     return resp
   }
 
-  async refresh(json: DraslAuthenticate.Response): Promise<DraslRefresh.Response> {
-    const body: DraslRefresh.Request = {
-      accessToken: json.accessToken,
-      clientToken: json.clientToken,
-      requestUser: true,
-      selectedProfile: json.selectedProfile
-    }
-
+  async refresh(body: DraslRefresh.Request): Promise<DraslRefresh.Response> {
     const resp: DraslRefresh.Response = await ky
       .post<DraslRefresh.Response>(this.authserver + '/refresh', {
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
       .json()
 
     await this.writeJson(resp)
     return resp
+  }
+
+  async invalidate(body: DraslInvalidate.Request): Promise<void> {
+    await ky.post<DraslRefresh.Response>(this.authserver + '/refresh', {
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
   }
 
   async writeJson(json: DraslAuthenticate.Response): Promise<void> {
@@ -115,7 +119,7 @@ export class DraslAuth {
     }
 
     const resp = await ky.post(this.authserver + '/validate', {
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     })
 
@@ -124,11 +128,11 @@ export class DraslAuth {
     throw new Error(`Unhandled status ${resp.status}: ${resp.statusText}!`)
   }
 
-  async signout(): Promise<void> {
-    if (!this.opts.password) throw new Error(`No password! Can't sign out.`)
+  async signout(creds: LoginCredentials): Promise<void> {
+    if (!creds.password) throw new Error(`No password! Can't sign out.`)
     const body: DraslSignout.Request = {
-      username: this.opts.username,
-      password: this.opts.password
+      username: creds.username,
+      password: creds.password
     }
 
     const resp = await ky.post(this.authserver + 'signout', {

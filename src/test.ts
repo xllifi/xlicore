@@ -9,15 +9,18 @@ if (!fs.existsSync(path.resolve(process.cwd(), 'store/instance'))) {
   fs.mkdirSync(path.resolve(process.cwd(), 'store/instance'), { recursive: true })
 }
 
-const drasl = new DraslAuth({
+const creds = {
   username: process.env.AUTHUSRNM!,
-  password: process.env.AUTHPW!,
+  password: process.env.AUTHPW!
+}
+
+const drasl = new DraslAuth({
   server: process.env.AUTHSRV!,
   saveDir: path.resolve(process.cwd(), 'store/instance')
 })
 
 const launchOpts: LaunchOpts = {
-  auth: await drasl.init(),
+  auth: await drasl.init(creds),
   useAuthlib: true,
   rootDir: path.resolve(process.cwd(), 'store'),
   version: '1.21.1',

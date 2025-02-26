@@ -8,7 +8,7 @@ export type Request = {
     /** This number might be increased by the vanilla client in the future */
     version: number
   }
-  /** Account username */
+  /** Playername */
   username: string
   /** Account password */
   password: string

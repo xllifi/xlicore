@@ -4,7 +4,7 @@ import fsp from 'fs/promises';
 import path from 'path';
 
 import { buildArguments } from './arguments/minecraft.js';
-import { downloadAuthlib } from './auth/authlib.js';
+import { downloadAuthlib } from './download/libraries/authlib.js';
 import { downloadAssets } from './download/assets.js';
 import { downloadJava } from './download/javaTemurin.js';
 import { downloadFabricLibraries } from './download/libraries/fabric.js';
