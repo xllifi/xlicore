@@ -155,48 +155,6 @@ export class Downloader {
     }
   }
 
-  async downloadMultipleFilesOld(files: dlt.DownloaderFile[], opts: dlt.DownloaderOpts = {}): Promise<void> {
-    opts = { ...this.generalOpts, ...opts }
-
-    if (opts.totalSize) {
-      console.log(`Doing total DL`)
-
-      let lastOnProgress: dlt.DownloaderCallbackOnProgress
-      if (opts.onDownloadProgress) lastOnProgress = opts.onDownloadProgress
-
-      let currentBytes: number = 0
-      opts = {
-        ...opts,
-        onDownloadProgress(progress, chunk, file, lastProgress) {
-          currentBytes += progress.transferredBytes - lastProgress.bytes
-          progress.percent = currentBytes / opts.totalSize!
-
-          // Don't do MULDL logs if there's a handler already
-          if (lastOnProgress) {
-            lastOnProgress(progress, chunk, file, lastProgress)
-          } else {
-            console.log(
-              `[MULDL] Total download: ${(progress.percent * 100).toFixed(2)}% (${currentBytes}/${opts.totalSize})` +
-                (file.type ? ` (${file.type})` : '') +
-                ` | Currently downloading ${file.name}`
-            )
-          }
-        }
-      }
-    }
-    const errs: Error[] = []
-
-    const chunks = files.length > 64 ? splitArray(files.length / 64, files) : [files]
-
-    for (const chunk of chunks) {
-      await Promise.all(chunk.map((file) => this.downloadSingleFile(file, opts).catch((err) => errs.push(err))))
-    }
-
-    if (errs.length > 0) {
-      console.log('[MULDL] ' + errs)
-    }
-  }
-
   async verifyFile<T>(file: dlt.DownloaderFile, lastProgress: dlt.DownloaderLastProgress, opts: dlt.DownloaderOpts): Promise<T | null> {
     const dest: string = path.resolve(file.dir, file.name!)
     const currentHash: string = await this.getHash(dest, file.verify!.algorithm)
