@@ -23,11 +23,11 @@ const launchOpts: LaunchOpts = {
   auth: await drasl.init(creds),
   useAuthlib: true,
   rootDir: path.resolve(process.cwd(), 'store'),
-  version: '1.21.1',
-  mrpack: {
-    url: 'https://cdn.modrinth.com/data/BYfVnHa7/versions/wODzvDvO/Simply%20Optimized-1.21.1-4.3.mrpack',
-    // url: 'https://cdn.modrinth.com/data/5FFgwNNP/versions/Jln0oj6n/Cobblemon%20Modpack%20%5BFabric%5D%201.6.mrpack',
-  }
+  version: '1.21.4',
+  // mrpack: {
+  //   url: 'https://cdn.modrinth.com/data/BYfVnHa7/versions/wODzvDvO/Simply%20Optimized-1.21.1-4.3.mrpack',
+  //   // url: 'https://cdn.modrinth.com/data/5FFgwNNP/versions/Jln0oj6n/Cobblemon%20Modpack%20%5BFabric%5D%201.6.mrpack',
+  // }
 }
 export const launch = new Launch(launchOpts)
 launch.start()

@@ -17,6 +17,7 @@ import { Downloader } from './utils/downloader.js';
 import type { GameLaunchArguments, LaunchOpts } from './types/Launch.ts'
 import type { FabricLauncherMeta } from './types/meta/fabric/FabricLauncherMeta.ts'
 import type { VersionManifest } from './types/meta/minecraft/VersionManifest.ts'
+import { makeClasspath } from './arguments/dedupClasspath.js';
 
 export class Launch {
   dl: Downloader
@@ -55,7 +56,7 @@ export class Launch {
     // Download
     const fabricCP = await downloadFabricLibraries(this, this.fabricMeta)
     const minecraftCP = await downloadMinecraftLibraries(this, this.versionManifest)
-    this.classpath = [...fabricCP, ...minecraftCP]
+    this.classpath = makeClasspath(this, fabricCP, minecraftCP)
     this.javaExePath = await downloadJava(this, this.versionManifest)
     this.assetPath = await downloadAssets(this, this.versionManifest)
     await parseMrpack(this, this.opts)
@@ -86,6 +87,12 @@ export class Launch {
   }
 
   private createProcess(): ChildProcessWithoutNullStreams {
+    console.log(`\n\n${this.javaExePath} ` + [
+        ...this.arguments.jvm,
+        `-cp`, this.classpath.join(';'),
+        this.fabricMeta.launcherMeta.mainClass.client,
+        ...this.arguments.game
+      ].join(' '))
     const mcprocess = spawn(
       this.javaExePath,
       [
