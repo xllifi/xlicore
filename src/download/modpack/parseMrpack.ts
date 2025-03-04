@@ -41,16 +41,18 @@ async function deleteByOldMeta(launch: Launch, oldmeta: MrpackMeta) {
     }
   })
   if (isBusyResult) throw isBusyResult
-    else files.splice(0, 1)
+  else files.splice(0, 1)
 
   const errors: Error[] = []
 
   const chunks = files.length > 64 ? splitArray(files.length / 64, files) : [files]
   for (const chunk of chunks) {
-    await Promise.all(chunk.map(file => {
-      console.log(`Removing file ${file.path}`)
-      fsp.rm(file.path)
-    })).catch((err) => {
+    await Promise.all(
+      chunk.map((file) => {
+        console.log(`Removing file ${file.path}`)
+        fsp.rm(file.path)
+      })
+    ).catch((err) => {
       if (err instanceof Error && err.name === 'EBUSY') {
         errors.push(new MrpackParseError('files_locked'))
         return
@@ -69,7 +71,13 @@ export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<voi
 
   if (!opts.mrpack) {
     if (oldmeta) await deleteByOldMeta(launch, oldmeta)
-    fsp.rm(path.resolve(launch.instancePath, 'modrinth.index.json'))
+    Promise.all([
+      fsp.rm(path.resolve(launch.instancePath, 'modrinth.index.json')), //
+      fsp.rm(path.resolve(launch.instancePath, 'modrinth.index.json.old'))
+    ]).catch((e: Error) => {
+      if (e.message.includes('ENOENT')) return
+      console.log(e)
+    })
     return
   }
 
