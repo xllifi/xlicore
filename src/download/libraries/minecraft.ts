@@ -21,6 +21,7 @@ export async function downloadMinecraftLibraries(launch: Launch, versionManifest
       dir: path.resolve(launch.opts.rootDir, 'libraries', path.dirname(lib.downloads.artifact.path)),
       name: path.basename(lib.downloads.artifact.path),
       type: 'libraries',
+      size: lib.downloads.artifact.size,
       verify: {
         hash: lib.downloads.artifact.sha1,
         algorithm: 'sha1'
