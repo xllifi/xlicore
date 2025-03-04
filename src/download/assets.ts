@@ -15,6 +15,7 @@ export async function downloadAssets(launch: Launch, versionManifest: VersionMan
     dir: path.resolve(assetRoot, 'indexes'),
     name: `${versionManifest.assetIndex.id}.json`,
     type: 'assets',
+    size: versionManifest.assetIndex.size,
     verify: {
       hash: versionManifest.assetIndex.sha1,
       algorithm: 'sha1'
@@ -24,12 +25,15 @@ export async function downloadAssets(launch: Launch, versionManifest: VersionMan
   const assets: AssetIndexObject[] = getUniqueArrayBy(Object.values(assetIndex.objects), 'hash')
 
   // If there's assetIndex downloaded there's a good chance all other assets are as well. This checks if they are downloaded.
+  let missingObjects: string[] = []
   if (fs.existsSync(path.resolve(file.dir, file.name!))) {
     try {
       const objectDirs: string[] = await fsp.readdir(path.resolve(assetRoot, 'objects'))
       const files: string[] = (await Promise.all(objectDirs.map((x) => fsp.readdir(path.resolve(assetRoot, 'objects', x))))).flat().sort()
-      const assetsHashes: string[] = assets.map((x) => x.hash).sort()
-      if (files.filter((x) => !assetsHashes.includes(x)).length <= 0) return assetRoot
+      const ogObjects: string[] = assets.map((x) => x.hash).sort()
+      missingObjects = ogObjects.filter((x) => !files.includes(x))
+      console.log(missingObjects)
+      if (missingObjects.length <= 0) return assetRoot
     } catch (err) {
       if (err instanceof Error) {
         if (err.name === 'ENOENT') {
@@ -40,18 +44,24 @@ export async function downloadAssets(launch: Launch, versionManifest: VersionMan
     }
   }
 
-  const files: DownloaderFile[] = assets.map((asset) => ({
+  let files: DownloaderFile[] = assets.map((asset) => ({
     url: `https://resources.download.minecraft.net/${asset.hash.substring(0, 2)}/${asset.hash}`,
     dir: path.resolve(assetRoot, 'objects', asset.hash.substring(0, 2)),
     name: `${asset.hash}`,
     type: 'assets',
+    size: asset.size,
     verify: {
       hash: asset.hash,
       algorithm: 'sha1'
     }
   }))
 
-  console.log(`Submitting asset filelist`)
+  // Remove anything except missing objects if there are missing objects
+  if (missingObjects.length > 0) {
+    files = files.filter(x => missingObjects.includes(x.name!))
+  }
+
+  console.log(`Submitting asset filelist (${files.length} entries)`)
   await launch.dl.downloadMultipleFiles(files, {
     totalSize: Object.values(assetIndex.objects)
       .map((x) => x.size)
