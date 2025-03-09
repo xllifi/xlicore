@@ -123,7 +123,6 @@ export async function parseMrpack(launch: Launch, opts: LaunchOpts): Promise<voi
       cachedFiles.push(file)
     }
   })
-  console.log(cachedFiles)
   await fsp.writeFile(path.resolve(launch.instancePath, 'overrides.json'), JSON.stringify(cachedFiles))
 
   const dlFiles: DownloaderFile[] = []

@@ -32,14 +32,8 @@ export async function downloadAssets(launch: Launch, versionManifest: VersionMan
       const files: string[] = (await Promise.all(objectDirs.map((x) => fsp.readdir(path.resolve(assetRoot, 'objects', x))))).flat().sort()
       const ogObjects: string[] = assets.map((x) => x.hash).sort()
       missingObjects = ogObjects.filter((x) => !files.includes(x))
-      console.log(missingObjects)
       if (missingObjects.length <= 0) return assetRoot
     } catch (err) {
-      if (err instanceof Error) {
-        if (err.name === 'ENOENT') {
-          console.log(`That's enoent!!`)
-        }
-      }
       console.error(err)
     }
   }
