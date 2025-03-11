@@ -73,26 +73,19 @@ export class Launch {
 
     const subprocess: ChildProcessWithoutNullStreams = this.createProcess()
 
-    subprocess.stdout.setEncoding('utf8')
-    // subprocess.stdout.on('data', (data: Buffer) => console.log('[MC LOGS] ' + data.toString().replace(/\n$/, '')))
-    subprocess.stderr.setEncoding('utf8')
-    // subprocess.stderr.on('data', (data) => console.error('[MC LOGS] ' + data.toString().replace(/\n$/, '')))
+    if (!subprocess) {
+      throw new Error('Process could not be started. Reason unknown.')
+    }
 
-    if (this.opts.callbacks?.gameOnExit) subprocess.on('exit', () => { this.opts.callbacks!.gameOnExit!(subprocess.pid || null) })
     if (this.opts.callbacks?.gameOnLogs) subprocess.stdout.on('data', (data: Buffer) => {this.opts.callbacks!.gameOnLogs!(data.toString().replace(/\n$/, ''))})
     if (this.opts.callbacks?.gameOnLogs) subprocess.stderr.on('data', (data: Buffer) => {this.opts.callbacks!.gameOnLogs!(data.toString().replace(/\n$/, ''))})
     if (this.opts.callbacks?.gameOnError) subprocess.on('error', this.opts.callbacks.gameOnError)
+    if (this.opts.callbacks?.gameOnExit) subprocess.on('exit', (val) => { this.opts.callbacks!.gameOnExit!(subprocess.pid || null, val) })
 
     return subprocess
   }
 
   private createProcess(): ChildProcessWithoutNullStreams {
-    console.log(`\n\n${this.javaExePath} ` + [
-        ...this.arguments.jvm,
-        `-cp`, this.classpath.join(';'),
-        this.fabricMeta.launcherMeta.mainClass.client,
-        ...this.arguments.game
-      ].join(' '))
     const mcprocess = spawn(
       this.javaExePath,
       [
@@ -103,6 +96,8 @@ export class Launch {
       ],
       { cwd: this.instancePath, detached: this.opts.gameOpts?.detached }
     )
+    mcprocess.stdout.setEncoding('utf8')
+    mcprocess.stderr.setEncoding('utf8')
     if (this.opts.callbacks?.gameOnStart) this.opts.callbacks.gameOnStart(mcprocess.pid || null)
     return mcprocess
   }

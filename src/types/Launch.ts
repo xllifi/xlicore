@@ -17,7 +17,7 @@ export type LaunchOpts = {
     dlOnProgress?: DownloaderCallbackOnProgress
     dlOnFinish?: DownloaderCallbackOnFinish
     gameOnStart?: (pid: number | null) => void
-    gameOnExit?: (pid: number | null) => void
+    gameOnExit?: (pid: number | null, exitcode: number | null) => void
     gameOnLogs?: (data: string) => void
     gameOnError?: (err: Error) => void
   }
